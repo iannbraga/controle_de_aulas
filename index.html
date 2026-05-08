@@ -50,14 +50,12 @@
     <!-- ═══════════ HOME ═══════════ -->
     <div class="main-view" v-if="view==='home'">
 
-      <!-- Navegador de mês -->
       <div class="mes-nav">
         <button class="mes-btn" @click="mesOffset--">‹</button>
         <div class="mes-label">{{ mesAtualLabel }}</div>
         <button class="mes-btn" @click="mesOffset++" :disabled="mesOffset>=0">›</button>
       </div>
 
-      <!-- Stats do mês -->
       <div class="stat-row">
         <div class="stat-mini">
           <div class="sv">{{ aulasMes.length }}</div>
@@ -82,7 +80,6 @@
         <i class="bi bi-coin" style="font-size:2rem;color:var(--chess-gold);opacity:.5"></i>
       </div>
 
-      <!-- Aulas do mês -->
       <div class="section-header">
         <div class="section-title">Aulas do mês</div>
         <button class="btn-gold" @click="view='aulas'" style="padding:6px 12px;font-size:0.78rem">Ver todas</button>
@@ -207,6 +204,11 @@
             <div class="meta mt-1 d-flex flex-wrap gap-2">
               <span>R$ {{ aluno.valorPadrao.toFixed(2) }}/aula</span>
               <span v-if="aluno.telefone"><i class="bi bi-phone"></i> {{ aluno.telefone }}</span>
+              <!-- Badge responsável -->
+              <span v-if="aluno.responsavelId"
+                style="background:var(--chess-gold);color:#1a1a1a;border-radius:6px;padding:1px 7px;font-size:0.68rem;font-weight:600">
+                <i class="bi bi-person-heart"></i> {{ getResponsavelNome(aluno.responsavelId) }}
+              </span>
               <span :class="aluno.ativo?'text-success':'text-danger'" style="font-size:0.7rem">
                 <i :class="aluno.ativo?'bi bi-circle-fill':'bi bi-circle'" style="font-size:.5rem"></i>
                 {{ aluno.ativo ? 'Ativo' : 'Inativo' }}
@@ -256,20 +258,75 @@
       </div>
     </div>
 
+    <!-- ═══════════ RESPONSÁVEIS ═══════════ -->
+    <div class="main-view" v-if="view==='responsaveis'">
+      <div class="section-header">
+        <div class="section-title">Responsáveis</div>
+        <button class="btn-gold" @click="openModalResponsavel(null)"><i class="bi bi-plus-lg"></i> Novo</button>
+      </div>
+
+      <div v-if="responsaveis.length===0" class="empty-state">
+        <i class="bi bi-person-heart"></i>
+        Nenhum responsável cadastrado.<br>
+        <span style="font-size:0.8rem">Cadastre responsáveis e vincule-os aos alunos.</span>
+      </div>
+
+      <div v-for="resp in responsaveis" :key="resp.id" class="aula-card" style="cursor:default">
+        <div class="aula-card-header">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="avatar" style="width:40px;height:40px;font-size:1rem;flex-shrink:0">{{ resp.nome[0] }}</div>
+            <div>
+              <div style="font-weight:600;font-size:0.95rem;color:var(--text-primary)">{{ resp.nome }}</div>
+              <div class="meta d-flex flex-wrap gap-2 mt-1">
+                <span v-if="resp.telefone" style="font-size:0.75rem;color:var(--text-muted)">
+                  <i class="bi bi-phone"></i> {{ resp.telefone }}
+                </span>
+                <span v-if="resp.email" style="font-size:0.75rem;color:var(--text-muted)">
+                  <i class="bi bi-envelope"></i> {{ resp.email }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <button class="btn-icon" @click="openCobranca(resp)" title="Ver cobrança">
+              <i class="bi bi-receipt" style="color:var(--chess-gold)"></i>
+            </button>
+            <button class="btn-icon" @click="openModalResponsavel(resp)"><i class="bi bi-pencil"></i></button>
+            <button class="btn-icon danger" @click="confirmDel={fn:()=>delResponsavel(resp.id)}"><i
+                class="bi bi-trash"></i></button>
+          </div>
+        </div>
+        <!-- Alunos vinculados -->
+        <div class="aula-card-body">
+          <div v-if="getAlunosDoResponsavel(resp.id).length===0" style="font-size:0.78rem;color:var(--text-muted)">
+            <i class="bi bi-info-circle"></i> Nenhum aluno vinculado ainda.
+          </div>
+          <div v-else style="display:flex;flex-wrap:wrap;gap:6px">
+            <span v-for="al in getAlunosDoResponsavel(resp.id)" :key="al.id"
+              style="background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:0.75rem;color:var(--text-secondary)">
+              <i class="bi bi-person-fill" style="font-size:0.65rem"></i> {{ al.nome }}
+            </span>
+          </div>
+          <div v-if="resp.observacoes"
+            style="font-size:0.75rem;color:var(--text-muted);margin-top:6px;font-style:italic">
+            {{ resp.observacoes }}
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══════════ FINANCEIRO ═══════════ -->
     <div class="main-view" v-if="view==='financeiro'">
       <div class="section-header">
         <div class="section-title">Financeiro</div>
       </div>
 
-      <!-- Navegador de mês -->
       <div class="mes-nav">
         <button class="mes-btn" @click="finMesOffset--">‹</button>
         <div class="mes-label">{{ finMesLabel }}</div>
         <button class="mes-btn" @click="finMesOffset++" :disabled="finMesOffset>=0">›</button>
       </div>
 
-      <!-- Stats rápidas -->
       <div class="stat-row">
         <div class="stat-mini">
           <div class="sv">{{ finAulasMes.length }}</div>
@@ -285,7 +342,6 @@
         </div>
       </div>
 
-      <!-- Total arrecadado -->
       <div class="total-box mb-3">
         <div>
           <div style="font-size:0.7rem;color:#aaa;text-transform:uppercase;letter-spacing:.05em">Total arrecadado</div>
@@ -294,7 +350,6 @@
         <i class="bi bi-cash-stack" style="font-size:2rem;color:var(--chess-gold);opacity:.5"></i>
       </div>
 
-      <!-- Fechamento por professor -->
       <div class="section-header" style="margin-top:4px">
         <div class="section-title" style="font-size:1.05rem">Pagamento dos professores</div>
       </div>
@@ -316,7 +371,6 @@
         </div>
       </div>
 
-      <!-- Detalhes das aulas do mês -->
       <div class="section-header" style="margin-top:8px">
         <div class="section-title" style="font-size:1.05rem">Aulas do período</div>
       </div>
@@ -413,6 +467,17 @@
           <input class="form-control" v-model.number="form.aluno.valorPadrao" type="number" min="0" step="0.50"
             placeholder="15.00" />
         </div>
+        <!-- Vínculo com responsável -->
+        <div class="mb-3">
+          <label class="form-label">Responsável (opcional)</label>
+          <select class="form-select" v-model="form.aluno.responsavelId">
+            <option value="">Sem responsável</option>
+            <option v-for="r in responsaveis" :key="r.id" :value="r.id">{{ r.nome }}</option>
+          </select>
+          <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px">
+            <i class="bi bi-info-circle"></i> Vinculando um responsável, ele aparecerá no fechamento de cobrança.
+          </div>
+        </div>
         <div class="mb-3">
           <label class="form-label">Observações</label>
           <textarea class="form-control" v-model="form.aluno.observacoes" rows="2"
@@ -458,6 +523,106 @@
             <i class="bi bi-check-lg"></i> Salvar
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- MODAL RESPONSÁVEL -->
+    <div class="modal-backdrop-custom" v-if="modals.responsavel" @click.self="modals.responsavel=false">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title"><i class="bi bi-person-heart"></i> {{ form.responsavel.id ? 'Editar' : 'Novo' }}
+          Responsável</div>
+
+        <div class="mb-3">
+          <label class="form-label">Nome</label>
+          <input class="form-control" v-model="form.responsavel.nome" placeholder="Ex: Maria Silva" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Telefone / WhatsApp</label>
+          <input class="form-control" v-model="form.responsavel.telefone" placeholder="(63) 99999-9999" type="tel" />
+          <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px">
+            <i class="bi bi-whatsapp"></i> Usado para envio direto da cobrança via WhatsApp.
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">E-mail (opcional)</label>
+          <input class="form-control" v-model="form.responsavel.email" placeholder="email@exemplo.com" type="email" />
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Observações</label>
+          <textarea class="form-control" v-model="form.responsavel.observacoes" rows="2"
+            placeholder="Ex: mãe do João e da Ana"></textarea>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-fill" @click="modals.responsavel=false">Cancelar</button>
+          <button class="btn-gold flex-fill justify-content-center" @click="salvarResponsavel">
+            <i class="bi bi-check-lg"></i> Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL COBRANÇA DO RESPONSÁVEL -->
+    <div class="modal-backdrop-custom" v-if="modals.cobranca && cobrancaResp" @click.self="modals.cobranca=false">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title"><i class="bi bi-receipt"></i> Cobrança — {{ cobrancaResp.nome }}</div>
+
+        <!-- Navegador de mês -->
+        <div class="mes-nav" style="margin-bottom:14px">
+          <button class="mes-btn" @click="cobrancaMesOffset--">‹</button>
+          <div class="mes-label">{{ cobrancaMesLabel }}</div>
+          <button class="mes-btn" @click="cobrancaMesOffset++" :disabled="cobrancaMesOffset>=0">›</button>
+        </div>
+
+        <!-- Sem presenças -->
+        <div v-if="cobrancaAtual.itens.length===0" class="empty-state" style="padding:20px 0">
+          <i class="bi bi-calendar-x"></i>
+          Nenhuma presença neste mês.
+        </div>
+
+        <!-- Itens por aluno -->
+        <div v-for="item in cobrancaAtual.itens" :key="item.alunoId" class="mb-3">
+          <div
+            style="font-weight:600;font-size:0.88rem;color:var(--text-primary);margin-bottom:6px;display:flex;justify-content:space-between">
+            <span><i class="bi bi-person-fill" style="color:var(--chess-gold)"></i> {{ item.nome }}</span>
+            <span style="color:var(--chess-green)">R$ {{ item.subtotal.toFixed(2) }}</span>
+          </div>
+          <div class="card p-0">
+            <div v-for="p in item.presencas" :key="p.data+p.nucleoId"
+              style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);font-size:0.8rem">
+              <div>
+                <span style="font-weight:500">{{ formatDate(p.data) }}</span>
+                <span style="color:var(--text-muted);margin-left:6px">{{ getNucleoNome(p.nucleoId) }}</span>
+              </div>
+              <span style="color:var(--chess-green);font-weight:600">R$ {{ p.valor.toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total -->
+        <div class="total-box mb-3" v-if="cobrancaAtual.itens.length>0">
+          <div>
+            <div style="font-size:0.7rem;color:#aaa">Total a cobrar</div>
+            <div class="t-valor">R$ {{ cobrancaAtual.total.toFixed(2) }}</div>
+          </div>
+          <i class="bi bi-cash-coin" style="font-size:2rem;color:var(--chess-gold);opacity:.5"></i>
+        </div>
+
+        <!-- Ações de compartilhamento -->
+        <div class="d-flex gap-2 flex-wrap">
+          <button class="btn btn-outline-secondary flex-fill" @click="copiarCobranca">
+            <i class="bi bi-clipboard"></i> Copiar
+          </button>
+          <button class="btn btn-success flex-fill" @click="whatsappCobranca" v-if="cobrancaResp.telefone">
+            <i class="bi bi-whatsapp"></i> WhatsApp
+          </button>
+          <button class="btn-gold flex-fill justify-content-center" @click="compartilharCobranca"
+            v-if="podeCompartilharNativo">
+            <i class="bi bi-share"></i> Compartilhar
+          </button>
+        </div>
+        <button class="btn btn-outline-secondary w-100 mt-2" @click="modals.cobranca=false">Fechar</button>
       </div>
     </div>
 
@@ -511,7 +676,6 @@
           </div>
         </div>
 
-        <!-- Preview financeiro -->
         <div class="total-box mb-3" v-if="form.aula.alunos.some(a=>a.presente)">
           <div>
             <div style="font-size:0.7rem;color:#aaa">Total desta aula</div>
@@ -545,7 +709,6 @@
         <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px">{{ formatDate(aulaFinanceiro.data) }} —
           {{ getNucleoNome(aulaFinanceiro.nucleoId) }}</div>
 
-        <!-- Alunos pagantes -->
         <div class="card-header-custom mb-0" style="border-radius:8px 8px 0 0;font-size:.85rem"><i
             class="bi bi-person-check"></i> Presenças</div>
         <div class="card p-0 mb-3" style="border-radius:0 0 8px 8px">
@@ -560,7 +723,6 @@
           </div>
         </div>
 
-        <!-- Divisão -->
         <div class="total-box mb-3">
           <div>
             <div style="font-size:.7rem;color:#aaa">Total Arrecadado</div>
@@ -600,7 +762,6 @@
         <div class="modal-handle"></div>
         <div class="modal-title"><i class="bi bi-database-fill"></i> Dados</div>
 
-        <!-- Stats resumo -->
         <div style="display:flex;gap:8px;margin-bottom:20px">
           <div
             style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
@@ -623,12 +784,11 @@
           <div
             style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
             <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{
-              nucleos.length }}</div>
-            <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase">Núcleos</div>
+              responsaveis.length }}</div>
+            <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase">Resps</div>
           </div>
         </div>
 
-        <!-- Exportar JSON -->
         <button class="dados-option" @click="exportarJSON">
           <div class="do-icon green"><i class="bi bi-download"></i></div>
           <div>
@@ -637,7 +797,6 @@
           </div>
         </button>
 
-        <!-- Importar JSON -->
         <button class="dados-option" @click="$refs.importInput.click()">
           <div class="do-icon blue"><i class="bi bi-upload"></i></div>
           <div>
@@ -648,7 +807,6 @@
         <input ref="importInput" type="file" accept=".json,application/json" style="display:none"
           @change="importarJSON($event)" />
 
-        <!-- Compartilhar resumo texto -->
         <button class="dados-option" @click="abrirCompartilharMes">
           <div class="do-icon gold"><i class="bi bi-share"></i></div>
           <div>
@@ -657,7 +815,6 @@
           </div>
         </button>
 
-        <!-- Limpar todos os dados -->
         <button class="dados-option" @click="confirmDel={fn: limparTudo}; modals.dados=false"
           style="border-color:#fdecea">
           <div class="do-icon red"><i class="bi bi-trash3"></i></div>
@@ -677,14 +834,12 @@
         <div class="modal-handle"></div>
         <div class="modal-title"><i class="bi bi-share"></i> Fechamento para Compartilhar</div>
 
-        <!-- Seletor de mês -->
         <div class="mes-nav" style="margin-bottom:14px">
           <button class="mes-btn" @click="shareMesOffset--">‹</button>
           <div class="mes-label">{{ shareMesLabel }}</div>
           <button class="mes-btn" @click="shareMesOffset++" :disabled="shareMesOffset>=0">›</button>
         </div>
 
-        <!-- Preview do texto -->
         <div
           style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:0.8rem;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;max-height:320px;overflow-y:auto;font-family:monospace"
           v-text="textoCompartilhar"></div>
@@ -715,8 +870,11 @@
       <button class="nav-btn" :class="{active:view==='alunos'}" @click="view='alunos'">
         <i class="bi bi-people"></i> Alunos
       </button>
+      <button class="nav-btn" :class="{active:view==='responsaveis'}" @click="view='responsaveis'">
+        <i class="bi bi-person-heart"></i> Resps
+      </button>
       <button class="nav-btn" :class="{active:view==='nucleos'}" @click="view='nucleos'">
-        <i class="bi bi-people"></i> Núcleos
+        <i class="bi bi-geo-alt"></i> Núcleos
       </button>
       <button class="nav-btn" :class="{active:view==='financeiro'}" @click="view='financeiro'">
         <i class="bi bi-cash-coin"></i> Financeiro
@@ -727,514 +885,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script>
-    const { createApp, reactive, computed, watch, ref } = Vue;
-
-    const STORAGE_KEY = 'xadrez-v1';
-
-    function loadData() {
-      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
-      catch (e) { return {}; }
-    }
-
-    function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-
-    function getMonthRef(offset) {
-      const d = new Date();
-      d.setDate(1);
-      d.setMonth(d.getMonth() + offset);
-      return { year: d.getFullYear(), month: d.getMonth() };
-    }
-
-    function aulaInMonth(aula, year, month) {
-      if (!aula.data) return false;
-      const [y, m] = aula.data.split('-').map(Number);
-      return y === year && (m - 1) === month;
-    }
-
-    const saved = loadData();
-
-    createApp({
-      setup() {
-        const view = ref('home');
-        const toast = ref(null);
-        const confirmDel = ref(null);
-        const aulaFinanceiro = ref(null);
-
-        const mesOffset = ref(0);
-        const finMesOffset = ref(0);
-
-        const professores = reactive(saved.professores || []);
-        const alunos = reactive(saved.alunos || []);
-        const nucleos = reactive(saved.nucleos || []);
-        const aulas = reactive(saved.aulas || []);
-
-        const persistAll = () => {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ professores, alunos, nucleos, aulas }));
-        };
-        watch([professores, alunos, nucleos, aulas], persistAll, { deep: true });
-
-        const showToast = (msg) => {
-          toast.value = msg;
-          setTimeout(() => toast.value = null, 2400);
-        };
-
-        const modals = reactive({ prof: false, aluno: false, nucleo: false, aula: false, financeiro: false, dados: false, compartilhar: false });
-        const form = reactive({ prof: {}, aluno: {}, nucleo: {}, aula: {} });
-        const shareMesOffset = ref(0);
-
-        // ── COMPUTED ──────────────────────────────────────────
-
-        const professoresAtivos = computed(() => professores.filter(p => p.ativo));
-        const alunosAtivos = computed(() => alunos.filter(a => a.ativo));
-        const aulasSorted = computed(() => [...aulas].sort((a, b) => b.data.localeCompare(a.data)));
-
-        const homeRef = computed(() => getMonthRef(mesOffset.value));
-        const mesAtualLabel = computed(() => {
-          const d = new Date(homeRef.value.year, homeRef.value.month, 1);
-          return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-        });
-        const aulasMes = computed(() =>
-          aulasSorted.value.filter(a => aulaInMonth(a, homeRef.value.year, homeRef.value.month))
-        );
-        const totalMes = computed(() => aulasMes.value.reduce((s, a) => s + calcTotal(a), 0));
-        const totalPresencasMes = computed(() => aulasMes.value.reduce((s, a) => s + alunosPresentes(a), 0));
-
-        const finRef = computed(() => getMonthRef(finMesOffset.value));
-        const finMesLabel = computed(() => {
-          const d = new Date(finRef.value.year, finRef.value.month, 1);
-          return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-        });
-        const finAulasMes = computed(() =>
-          aulasSorted.value.filter(a => aulaInMonth(a, finRef.value.year, finRef.value.month))
-        );
-        const finTotal = computed(() => finAulasMes.value.reduce((s, a) => s + calcTotal(a), 0));
-        const finTotalPresencas = computed(() => finAulasMes.value.reduce((s, a) => s + alunosPresentes(a), 0));
-
-        const finFechamento = computed(() => {
-          const map = {};
-          for (const aula of finAulasMes.value) {
-            const vpp = calcValorPorPeso(aula);
-            for (const ap of aula.professores) {
-              if (!map[ap.professorId]) {
-                map[ap.professorId] = { profId: ap.professorId, nome: getProfNome(ap.professorId), total: 0, numAulas: 0, pesoTotal: 0 };
-              }
-              map[ap.professorId].total += ap.pesoAplicado * vpp;
-              map[ap.professorId].numAulas += 1;
-              map[ap.professorId].pesoTotal += ap.pesoAplicado;
-            }
-          }
-          return Object.values(map)
-            .map(p => ({ ...p, pesoMedio: p.numAulas > 0 ? p.pesoTotal / p.numAulas : 0 }))
-            .sort((a, b) => b.total - a.total);
-        });
-
-        const alunosAtivosForm = computed(() => {
-          if (!form.aula.alunos) return alunosAtivos.value;
-          const idsNaAula = form.aula.alunos.map(a => a.alunoId);
-          const extras = alunos.filter(a => !a.ativo && idsNaAula.includes(a.id));
-          return [...alunosAtivos.value, ...extras];
-        });
-
-        // ── HELPERS ──────────────────────────────────────────
-        const getNucleoNome = (id) => (nucleos.find(n => n.id === id) || {}).nome || '—';
-        const getProfNome = (id) => (professores.find(p => p.id === id) || {}).nome || '—';
-        const getAlunoNome = (id) => (alunos.find(a => a.id === id) || {}).nome || '—';
-        const getProfNomes = (aula) => aula.professores.map(ap => getProfNome(ap.professorId)).join(', ') || '—';
-        const alunosPresentes = (aula) => aula.alunos.filter(a => a.presente).length;
-        const formatDate = (d) => {
-          if (!d) return '';
-          const [y, m, dd] = d.split('-');
-          return `${dd}/${m}/${y}`;
-        };
-
-        // ── FINANCIAL CALC ──────────────────────────────────
-        const calcTotal = (aula) => aula.alunos.filter(a => a.presente).reduce((s, a) => s + (a.valorPago || 0), 0);
-        const calcPesoTotal = (aula) => aula.professores.reduce((s, p) => s + p.pesoAplicado, 0);
-        const calcValorPorPeso = (aula) => {
-          const pt = calcPesoTotal(aula);
-          return pt > 0 ? calcTotal(aula) / pt : 0;
-        };
-
-        // ── PROFESSOR ────────────────────────────────────────
-        const openModalProf = (prof) => {
-          if (prof) { Object.assign(form.prof, { ...prof }); }
-          else { form.prof = { id: null, nome: '', nivel: 'professor', peso: 1.5, ativo: true }; }
-          modals.prof = true;
-        };
-        const applyPesoSugerido = () => {
-          const map = { principal: 2, professor: 1.5, auxiliar: 1, trainee: 0.5 };
-          form.prof.peso = map[form.prof.nivel] ?? 1;
-        };
-        const salvarProf = () => {
-          if (!form.prof.nome.trim()) { showToast('Informe o nome do professor.'); return; }
-          if (form.prof.id) {
-            const i = professores.findIndex(p => p.id === form.prof.id);
-            if (i >= 0) Object.assign(professores[i], { ...form.prof });
-          } else {
-            professores.push({ ...form.prof, id: genId() });
-          }
-          modals.prof = false;
-          showToast('Professor salvo!');
-        };
-        const delProf = (id) => {
-          const i = professores.findIndex(p => p.id === id);
-          if (i >= 0) professores.splice(i, 1);
-          showToast('Professor removido.');
-        };
-
-        // ── ALUNO ────────────────────────────────────────────
-        const openModalAluno = (aluno) => {
-          if (aluno) { Object.assign(form.aluno, { ...aluno }); }
-          else { form.aluno = { id: null, nome: '', telefone: '', valorPadrao: 15, observacoes: '', ativo: true }; }
-          modals.aluno = true;
-        };
-        const salvarAluno = () => {
-          if (!form.aluno.nome.trim()) { showToast('Informe o nome do aluno.'); return; }
-          if (form.aluno.id) {
-            const i = alunos.findIndex(a => a.id === form.aluno.id);
-            if (i >= 0) Object.assign(alunos[i], { ...form.aluno });
-          } else {
-            alunos.push({ ...form.aluno, id: genId() });
-          }
-          modals.aluno = false;
-          showToast('Aluno salvo!');
-        };
-        const delAluno = (id) => {
-          const i = alunos.findIndex(a => a.id === id);
-          if (i >= 0) alunos.splice(i, 1);
-          showToast('Aluno removido.');
-        };
-
-        // ── NÚCLEO ────────────────────────────────────────────
-        const openModalNucleo = (nucleo) => {
-          if (nucleo) { Object.assign(form.nucleo, { ...nucleo }); }
-          else { form.nucleo = { id: null, nome: '', endereco: '', observacoes: '' }; }
-          modals.nucleo = true;
-        };
-        const salvarNucleo = () => {
-          if (!form.nucleo.nome.trim()) { showToast('Informe o nome do núcleo.'); return; }
-          if (form.nucleo.id) {
-            const i = nucleos.findIndex(n => n.id === form.nucleo.id);
-            if (i >= 0) Object.assign(nucleos[i], { ...form.nucleo });
-          } else {
-            nucleos.push({ ...form.nucleo, id: genId() });
-          }
-          modals.nucleo = false;
-          showToast('Núcleo salvo!');
-        };
-        const delNucleo = (id) => {
-          const i = nucleos.findIndex(n => n.id === id);
-          if (i >= 0) nucleos.splice(i, 1);
-          showToast('Núcleo removido.');
-        };
-
-        // ── AULA ─────────────────────────────────────────────
-        const openNovaAula = () => {
-          const today = new Date().toISOString().slice(0, 10);
-          form.aula = { id: null, data: today, nucleoId: '', professores: [], alunos: [], observacoes: '' };
-          modals.aula = true;
-        };
-        const editarAula = (aula) => {
-          form.aula = JSON.parse(JSON.stringify(aula));
-          const idsJaExistem = new Set(form.aula.alunos.map(a => a.alunoId));
-          for (const al of alunos.filter(a => a.ativo)) {
-            if (!idsJaExistem.has(al.id)) {
-              form.aula.alunos.push({ alunoId: al.id, valorPago: al.valorPadrao, presente: false });
-            }
-          }
-          modals.aula = true;
-        };
-
-        const aulaHasProf = (profId) => form.aula.professores?.some(p => p.professorId === profId);
-        const toggleProfAula = (profId, peso) => {
-          const idx = form.aula.professores.findIndex(p => p.professorId === profId);
-          if (idx >= 0) form.aula.professores.splice(idx, 1);
-          else form.aula.professores.push({ professorId: profId, pesoAplicado: peso });
-        };
-
-        const aulaAlunoPresente = (alunoId) => {
-          const al = form.aula.alunos?.find(a => a.alunoId === alunoId);
-          return al ? al.presente : false;
-        };
-        const getAlunoValor = (alunoId) => {
-          const al = form.aula.alunos?.find(a => a.alunoId === alunoId);
-          return al ? al.valorPago : '';
-        };
-        const toggleAlunoAula = (alunoId, valorPadrao, checked) => {
-          const idx = form.aula.alunos.findIndex(a => a.alunoId === alunoId);
-          if (idx >= 0) {
-            form.aula.alunos[idx].presente = checked;
-          } else {
-            form.aula.alunos.push({ alunoId, valorPago: valorPadrao, presente: checked });
-          }
-        };
-        const setAlunoValor = (alunoId, val) => {
-          const idx = form.aula.alunos.findIndex(a => a.alunoId === alunoId);
-          if (idx >= 0) form.aula.alunos[idx].valorPago = parseFloat(val) || 0;
-        };
-        const calcTotalForm = () => (form.aula.alunos || []).filter(a => a.presente).reduce((s, a) => s + (a.valorPago || 0), 0);
-
-        const salvarAula = () => {
-          if (!form.aula.data) { showToast('Informe a data da aula.'); return; }
-          if (!form.aula.nucleoId) { showToast('Selecione o núcleo.'); return; }
-          if (form.aula.id) {
-            const i = aulas.findIndex(a => a.id === form.aula.id);
-            if (i >= 0) Object.assign(aulas[i], { ...form.aula });
-          } else {
-            aulas.push({ ...form.aula, id: genId() });
-          }
-          modals.aula = false;
-          showToast('Aula registrada!');
-        };
-        const delAula = (id) => {
-          const i = aulas.findIndex(a => a.id === id);
-          if (i >= 0) aulas.splice(i, 1);
-          showToast('Aula removida.');
-        };
-
-        // ── COMPARTILHAR ──────────────────────────────────────
-
-        const shareRef = computed(() => getMonthRef(shareMesOffset.value));
-        const shareMesLabel = computed(() => {
-          const d = new Date(shareRef.value.year, shareRef.value.month, 1);
-          return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-        });
-        const shareAulasMes = computed(() =>
-          aulasSorted.value.filter(a => aulaInMonth(a, shareRef.value.year, shareRef.value.month))
-        );
-        const shareTotal = computed(() => shareAulasMes.value.reduce((s, a) => s + calcTotal(a), 0));
-        const shareTotalPresencas = computed(() => shareAulasMes.value.reduce((s, a) => s + alunosPresentes(a), 0));
-
-        // Fechamento de professores para o compartilhamento
-        const shareFechamento = computed(() => {
-          const map = {};
-          for (const aula of shareAulasMes.value) {
-            const vpp = calcValorPorPeso(aula);
-            for (const ap of aula.professores) {
-              if (!map[ap.professorId]) {
-                map[ap.professorId] = { nome: getProfNome(ap.professorId), total: 0, numAulas: 0 };
-              }
-              map[ap.professorId].total += ap.pesoAplicado * vpp;
-              map[ap.professorId].numAulas += 1;
-            }
-          }
-          return Object.values(map).sort((a, b) => b.total - a.total);
-        });
-
-        // Frequência e pagamento por aluno no mês
-        const shareFrequenciaAlunos = computed(() => {
-          const map = {};
-          for (const aula of shareAulasMes.value) {
-            for (const aa of aula.alunos) {
-              if (!aa.presente) continue;
-              if (!map[aa.alunoId]) {
-                map[aa.alunoId] = { nome: getAlunoNome(aa.alunoId), numAulas: 0, totalPago: 0 };
-              }
-              map[aa.alunoId].numAulas += 1;
-              map[aa.alunoId].totalPago += aa.valorPago || 0;
-            }
-          }
-          return Object.values(map).sort((a, b) => b.numAulas - a.numAulas || b.totalPago - a.totalPago);
-        });
-
-        // Resumo por núcleo no mês
-        const shareResumoNucleos = computed(() => {
-          const map = {};
-          for (const aula of shareAulasMes.value) {
-            const nId = aula.nucleoId;
-            if (!map[nId]) {
-              map[nId] = { nome: getNucleoNome(nId), numAulas: 0, total: 0, presencas: 0 };
-            }
-            map[nId].numAulas += 1;
-            map[nId].total += calcTotal(aula);
-            map[nId].presencas += alunosPresentes(aula);
-          }
-          return Object.values(map).sort((a, b) => b.total - a.total);
-        });
-
-        const textoCompartilhar = computed(() => {
-          const mes = shareMesLabel.value.charAt(0).toUpperCase() + shareMesLabel.value.slice(1);
-          const totalAulas = shareAulasMes.value.length;
-          const totalPresencas = shareTotalPresencas.value;
-          const mediaAlunosPorAula = totalAulas > 0 ? (totalPresencas / totalAulas).toFixed(1) : '0';
-          const mediaArrecadacaoPorAula = totalAulas > 0 ? (shareTotal.value / totalAulas).toFixed(2) : '0.00';
-          const mediaArrecadacaoPorAluno = totalPresencas > 0 ? (shareTotal.value / totalPresencas).toFixed(2) : '0.00';
-
-          const linhas = [];
-          linhas.push(`♟ Clube de Xadrez — Fechamento ${mes}`);
-          linhas.push(`${'═'.repeat(34)}`);
-
-          // Resumo geral
-          linhas.push(`📋 Resumo Geral`);
-          linhas.push(`  Aulas realizadas : ${totalAulas}`);
-          linhas.push(`  Total de presenças: ${totalPresencas}`);
-          linhas.push(`  Alunos únicos     : ${shareFrequenciaAlunos.value.length}`);
-          linhas.push(`  Média alunos/aula : ${mediaAlunosPorAula}`);
-          linhas.push('');
-
-          // Financeiro
-          linhas.push(`💰 Financeiro`);
-          linhas.push(`  Total arrecadado  : R$ ${shareTotal.value.toFixed(2)}`);
-          linhas.push(`  Média por aula    : R$ ${mediaArrecadacaoPorAula}`);
-          linhas.push(`  Média por aluno/aula: R$ ${mediaArrecadacaoPorAluno}`);
-          linhas.push('');
-
-          // Núcleos (só se houver mais de 1 ou se houver algum)
-          if (shareResumoNucleos.value.length > 0) {
-            linhas.push(`🏫 Por Núcleo`);
-            for (const n of shareResumoNucleos.value) {
-              linhas.push(`  ${n.nome}`);
-              linhas.push(`    ${n.numAulas} aula(s) · ${n.presencas} presenças · R$ ${n.total.toFixed(2)}`);
-            }
-            linhas.push('');
-          }
-
-          // Pagamento dos professores
-          if (shareFechamento.value.length > 0) {
-            linhas.push(`💵 Pagamento dos Professores`);
-            for (const fp of shareFechamento.value) {
-              linhas.push(`  • ${fp.nome}: R$ ${fp.total.toFixed(2)} (${fp.numAulas} aula${fp.numAulas > 1 ? 's' : ''})`);
-            }
-            linhas.push('');
-          }
-
-          // Frequência dos alunos
-          if (shareFrequenciaAlunos.value.length > 0) {
-            linhas.push(`👥 Frequência dos Alunos`);
-            for (const al of shareFrequenciaAlunos.value) {
-              const freq = totalAulas > 0 ? Math.round((al.numAulas / totalAulas) * 100) : 0;
-              linhas.push(`  • ${al.nome}: ${al.numAulas}/${totalAulas} aula(s) (${freq}%) · R$ ${al.totalPago.toFixed(2)}`);
-            }
-            linhas.push('');
-          }
-
-          // Detalhes das aulas
-          if (shareAulasMes.value.length > 0) {
-            linhas.push(`📅 Detalhes das Aulas`);
-            for (const aula of shareAulasMes.value) {
-              const total = calcTotal(aula);
-              const profs = getProfNomes(aula);
-              const nAlunos = alunosPresentes(aula);
-              linhas.push(`  ${formatDate(aula.data)} — ${getNucleoNome(aula.nucleoId)}`);
-              linhas.push(`    👤 ${nAlunos} aluno(s)  💰 R$ ${total.toFixed(2)}  🎓 ${profs}`);
-              if (aula.observacoes) linhas.push(`    📝 ${aula.observacoes}`);
-            }
-          }
-
-          linhas.push('');
-          linhas.push(`— gerado pelo Clube de Xadrez App`);
-          return linhas.join('\n');
-        });
-
-        const podeCompartilharNativo = computed(() => !!navigator.share);
-
-        const abrirCompartilharMes = () => {
-          shareMesOffset.value = 0;
-          modals.dados = false;
-          modals.compartilhar = true;
-        };
-
-        const copiarTexto = () => {
-          navigator.clipboard.writeText(textoCompartilhar.value)
-            .then(() => showToast('Texto copiado!'))
-            .catch(() => showToast('Não foi possível copiar.'));
-        };
-
-        const compartilharNativo = () => {
-          navigator.share({
-            title: `Clube de Xadrez — ${shareMesLabel.value}`,
-            text: textoCompartilhar.value,
-          }).catch(() => { });
-        };
-
-        // ── EXPORT / IMPORT ──────────────────────────────────
-        const exportarJSON = () => {
-          const dados = { professores: [...professores], alunos: [...alunos], nucleos: [...nucleos], aulas: [...aulas] };
-          const json = JSON.stringify(dados, null, 2);
-          const blob = new Blob([json], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          const hoje = new Date().toISOString().slice(0, 10);
-          a.href = url;
-          a.download = `xadrez-backup-${hoje}.json`;
-          a.click();
-          URL.revokeObjectURL(url);
-          showToast('Backup exportado!');
-        };
-
-        const importarJSON = (event) => {
-          const file = event.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            try {
-              const dados = JSON.parse(e.target.result);
-              if (!dados.professores || !dados.alunos || !dados.nucleos || !dados.aulas) {
-                showToast('Arquivo inválido. Verifique o formato.'); return;
-              }
-              professores.splice(0, professores.length, ...dados.professores);
-              alunos.splice(0, alunos.length, ...dados.alunos);
-              nucleos.splice(0, nucleos.length, ...dados.nucleos);
-              aulas.splice(0, aulas.length, ...dados.aulas);
-              modals.dados = false;
-              showToast(`Importado: ${dados.aulas.length} aulas, ${dados.professores.length} profs, ${dados.alunos.length} alunos.`);
-            } catch {
-              showToast('Erro ao ler o arquivo JSON.');
-            }
-            event.target.value = '';
-          };
-          reader.readAsText(file);
-        };
-
-        const limparTudo = () => {
-          professores.splice(0);
-          alunos.splice(0);
-          nucleos.splice(0);
-          aulas.splice(0);
-          showToast('Todos os dados foram removidos.');
-        };
-
-        const closeDadosModal = () => { modals.dados = false; };
-
-        const openFinanceiro = (aula) => {
-          aulaFinanceiro.value = aula;
-          modals.financeiro = true;
-        };
-
-        return {
-          view, toast, confirmDel, modals, form,
-          professores, alunos, nucleos, aulas,
-          professoresAtivos, alunosAtivos, alunosAtivosForm,
-          aulasSorted,
-          // Home
-          mesOffset, mesAtualLabel, aulasMes, totalMes, totalPresencasMes,
-          // Financeiro tab
-          finMesOffset, finMesLabel, finAulasMes, finTotal, finTotalPresencas, finFechamento,
-          aulaFinanceiro,
-          // Compartilhar
-          shareMesOffset, shareMesLabel, textoCompartilhar, podeCompartilharNativo,
-          abrirCompartilharMes, copiarTexto, compartilharNativo,
-          // Export / Import
-          exportarJSON, importarJSON, limparTudo, closeDadosModal,
-          // helpers
-          getNucleoNome, getProfNome, getAlunoNome, getProfNomes, alunosPresentes, formatDate,
-          calcTotal, calcPesoTotal, calcValorPorPeso,
-          // prof
-          openModalProf, applyPesoSugerido, salvarProf, delProf,
-          // aluno
-          openModalAluno, salvarAluno, delAluno,
-          // nucleo
-          openModalNucleo, salvarNucleo, delNucleo,
-          // aula
-          openNovaAula, editarAula, salvarAula, delAula,
-          aulaHasProf, toggleProfAula,
-          aulaAlunoPresente, getAlunoValor, toggleAlunoAula, setAlunoValor, calcTotalForm,
-          openFinanceiro,
-        };
-      }
-    }).mount('#app');
-  </script>
+  <script src="script.js"></script>
 </body>
 
 </html>
