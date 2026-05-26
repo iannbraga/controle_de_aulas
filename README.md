@@ -91,6 +91,3 @@ O peso não é um percentual fixo, é uma **razão relativa**. Isso significa qu
 
 Um trainee com peso 0 participa da aula mas não retira nada do valor — útil para período de observação sem impactar a remuneração dos professores efetivos.
 
----
-
-**O que fica para a Fase 2** do roadmap: controle de inadimplência, histórico individual do aluno, exportação em PDF/Excel, relatórios avançados, múltiplos usuários com permissões e sincronização em nuvem (Supabase/Firebase).
