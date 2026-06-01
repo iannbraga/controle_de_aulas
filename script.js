@@ -66,7 +66,29 @@ createApp({
 
     const professoresAtivos = computed(() => professores.filter(p => p.ativo));
     const alunosAtivos = computed(() => alunos.filter(a => a.ativo));
-    const aulasSorted = computed(() => [...aulas].sort((a, b) => b.data.localeCompare(a.data)));
+    //const aulasSorted = computed(() => [...aulas].sort((a, b) => b.data.localeCompare(a.data)));
+    // DEPOIS
+    const aulasSorted = computed(() => [...aulas].sort((a, b) => {
+      const nA = getNucleoNome(a.nucleoId);
+      const nB = getNucleoNome(b.nucleoId);
+      const porNucleo = nA.localeCompare(nB, 'pt-BR');
+      if (porNucleo !== 0) return porNucleo;
+      return a.data.localeCompare(b.data); // cronológico crescente
+    }));
+
+    const aulasPorNucleo = computed(() => {
+      const grupos = [];
+      let nucleoAtual = null;
+      for (const aula of aulasSorted.value) {
+        const nomeNucleo = getNucleoNome(aula.nucleoId);
+        if (nomeNucleo !== nucleoAtual) {
+          nucleoAtual = nomeNucleo;
+          grupos.push({ nucleoNome: nomeNucleo, aulas: [] });
+        }
+        grupos[grupos.length - 1].aulas.push(aula);
+      }
+      return grupos;
+    });
 
     const homeRef = computed(() => getMonthRef(mesOffset.value));
     const mesAtualLabel = computed(() => {
@@ -365,7 +387,7 @@ createApp({
       const al = form.aula.alunos?.find(a => a.alunoId === alunoId);
       return al ? al.valorPago : '';
     };
-    const toggleAlunoAula = (alunoId, valorPadrao, checked) => {
+    const toggleAlunoAula = (alunoId, vfalorPadrao, checked) => {
       const idx = form.aula.alunos.findIndex(a => a.alunoId === alunoId);
       if (idx >= 0) {
         form.aula.alunos[idx].presente = checked;
@@ -601,7 +623,7 @@ createApp({
       view, toast, confirmDel, modals, form,
       professores, alunos, nucleos, aulas, responsaveis,
       professoresAtivos, alunosAtivos, alunosAtivosForm,
-      aulasSorted,
+      aulasSorted, aulasPorNucleo,
       // Home
       mesOffset, mesAtualLabel, aulasMes, totalMes, totalPresencasMes,
       // Financeiro tab
