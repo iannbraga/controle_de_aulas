@@ -6,7 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Clube de Xadrez — Gestão</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
   <link rel="stylesheet" href="style.css">
 </head>
@@ -74,7 +76,8 @@
 
       <div class="total-box mb-3">
         <div>
-          <div style="font-size:0.7rem;color:#aaa;text-transform:uppercase;letter-spacing:.05em">Arrecadação do mês</div>
+          <div style="font-size:0.7rem;color:#aaa;text-transform:uppercase;letter-spacing:.05em">Arrecadação do mês
+          </div>
           <div class="t-valor">R$ {{ totalMes.toFixed(2) }}</div>
         </div>
         <i class="bi bi-coin" style="font-size:2rem;color:var(--chess-gold);opacity:.5"></i>
@@ -107,7 +110,8 @@
             <div class="aula-nucleo">{{ getNucleoNome(aula.nucleoId) }}</div>
           </div>
           <div style="text-align:right">
-            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ calcTotal(aula).toFixed(2) }}</div>
+            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{
+              calcTotal(aula).toFixed(2) }}</div>
             <div style="font-size:0.7rem;color:var(--text-muted)">{{ alunosPresentes(aula) }} alunos</div>
           </div>
         </div>
@@ -137,20 +141,25 @@
             <div class="aula-nucleo">{{ getNucleoNome(aula.nucleoId) }}</div>
           </div>
           <div class="d-flex gap-2 align-items-center">
-            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ calcTotal(aula).toFixed(2) }}</div>
-            <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill" style="color:var(--chess-gold)"></i></button>
+            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{
+              calcTotal(aula).toFixed(2) }}</div>
+            <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill"
+                style="color:var(--chess-gold)"></i></button>
             <button class="btn-icon" @click="editarAula(aula)"><i class="bi bi-pencil"></i></button>
-            <button class="btn-icon danger" @click="confirmDel={fn:()=>delAula(aula.id)}"><i class="bi bi-trash"></i></button>
+            <button class="btn-icon danger" @click="confirmDel={fn:()=>delAula(aula.id)}"><i
+                class="bi bi-trash"></i></button>
           </div>
         </div>
         <div class="aula-card-body">
           <div class="aula-stat mb-1"><i class="bi bi-people-fill"></i> {{ getProfNomes(aula) }}</div>
-          <div class="aula-stat"><i class="bi bi-person-check"></i> {{ alunosPresentes(aula) }} aluno(s) presente(s)</div>
+          <div class="aula-stat"><i class="bi bi-person-check"></i> {{ alunosPresentes(aula) }} aluno(s) presente(s)
+          </div>
           <!-- Indicador de pendências nesta aula -->
           <div v-if="aulaTempendencia(aula)" class="aula-stat mt-1" style="color:#e65100">
             <i class="bi bi-exclamation-circle-fill"></i> {{ contarPendenciasAula(aula) }} pendência(s) nesta aula
           </div>
-          <div v-if="aula.observacoes" class="aula-stat mt-1"><i class="bi bi-chat-left-text"></i> {{ aula.observacoes }}</div>
+          <div v-if="aula.observacoes" class="aula-stat mt-1"><i class="bi bi-chat-left-text"></i> {{ aula.observacoes
+            }}</div>
         </div>
       </div>
     </div>
@@ -159,7 +168,8 @@
     <div class="main-view" v-if="view==='pendencias'">
       <div class="section-header">
         <div class="section-title">Pendências</div>
-        <div v-if="totalPendenciasGeral > 0" style="font-family:'DM Serif Display',serif;font-size:1rem;color:var(--chess-red)">
+        <div v-if="totalPendenciasGeral > 0"
+          style="font-family:'DM Serif Display',serif;font-size:1rem;color:var(--chess-red)">
           R$ {{ totalPendenciasGeralValor.toFixed(2) }}
         </div>
       </div>
@@ -168,7 +178,8 @@
       <div class="mes-nav mb-0">
         <button class="mes-btn" @click="pendMesOffset--">‹</button>
         <div class="mes-label">{{ pendMesOffset === null ? 'Todas' : pendMesLabel }}</div>
-        <button class="mes-btn" @click="pendMesOffset !== null && pendMesOffset < 0 ? pendMesOffset++ : null" :disabled="pendMesOffset === null || pendMesOffset >= 0">›</button>
+        <button class="mes-btn" @click="pendMesOffset !== null && pendMesOffset < 0 ? pendMesOffset++ : null"
+          :disabled="pendMesOffset === null || pendMesOffset >= 0">›</button>
       </div>
       <div style="text-align:center;margin-bottom:12px">
         <button class="btn btn-sm" :class="pendMesOffset===null?'btn-dark':'btn-outline-secondary'"
@@ -225,7 +236,8 @@
       </div>
 
       <div class="card p-0" v-if="professores.length>0">
-        <div v-for="(prof, idx) in professores" :key="prof.id" class="list-item" :style="idx===0?'border-radius:12px 12px 0 0':''">
+        <div v-for="(prof, idx) in professores" :key="prof.id" class="list-item"
+          :style="idx===0?'border-radius:12px 12px 0 0':''">
           <div class="avatar">{{ prof.nome[0] }}</div>
           <div class="info">
             <div class="nome">{{ prof.nome }}</div>
@@ -240,7 +252,8 @@
           </div>
           <div class="actions">
             <button class="btn-icon" @click="openModalProf(prof)"><i class="bi bi-pencil"></i></button>
-            <button class="btn-icon danger" @click="confirmDel={fn:()=>delProf(prof.id)}"><i class="bi bi-trash"></i></button>
+            <button class="btn-icon danger" @click="confirmDel={fn:()=>delProf(prof.id)}"><i
+                class="bi bi-trash"></i></button>
           </div>
         </div>
       </div>
@@ -259,7 +272,8 @@
       </div>
 
       <div class="card p-0" v-if="alunos.length>0">
-        <div v-for="(aluno, idx) in alunos" :key="aluno.id" class="list-item" :style="idx===0?'border-radius:12px 12px 0 0':''">
+        <div v-for="(aluno, idx) in alunos" :key="aluno.id" class="list-item"
+          :style="idx===0?'border-radius:12px 12px 0 0':''">
           <div class="avatar">{{ aluno.nome[0] }}</div>
           <div class="info">
             <div class="nome">{{ aluno.nome }}</div>
@@ -274,13 +288,15 @@
             <!-- Pendência rápida do aluno -->
             <div v-if="getPendenciasAluno(aluno.id).length > 0" style="font-size:0.72rem;color:#e65100;margin-top:3px">
               <i class="bi bi-exclamation-circle-fill"></i>
-              {{ getPendenciasAluno(aluno.id).length }} pendência(s) · R$ {{ getPendenciasAluno(aluno.id).reduce((s,p)=>s+p.valor,0).toFixed(2) }}
+              {{ getPendenciasAluno(aluno.id).length }} pendência(s) · R$ {{
+              getPendenciasAluno(aluno.id).reduce((s,p)=>s+p.valor,0).toFixed(2) }}
             </div>
             <div v-if="aluno.observacoes" class="meta mt-1" style="font-style:italic">{{ aluno.observacoes }}</div>
           </div>
           <div class="actions">
             <button class="btn-icon" @click="openModalAluno(aluno)"><i class="bi bi-pencil"></i></button>
-            <button class="btn-icon danger" @click="confirmDel={fn:()=>delAluno(aluno.id)}"><i class="bi bi-trash"></i></button>
+            <button class="btn-icon danger" @click="confirmDel={fn:()=>delAluno(aluno.id)}"><i
+                class="bi bi-trash"></i></button>
           </div>
         </div>
       </div>
@@ -299,8 +315,10 @@
       </div>
 
       <div class="card p-0" v-if="nucleos.length>0">
-        <div v-for="(nucleo, idx) in nucleos" :key="nucleo.id" class="list-item" :style="idx===0?'border-radius:12px 12px 0 0':''">
-          <div class="avatar" style="background:var(--chess-dark-brown);color:white;border-color:var(--chess-dark-brown)">
+        <div v-for="(nucleo, idx) in nucleos" :key="nucleo.id" class="list-item"
+          :style="idx===0?'border-radius:12px 12px 0 0':''">
+          <div class="avatar"
+            style="background:var(--chess-dark-brown);color:white;border-color:var(--chess-dark-brown)">
             <i class="bi bi-geo-alt-fill" style="font-size:1rem"></i>
           </div>
           <div class="info">
@@ -310,7 +328,8 @@
           </div>
           <div class="actions">
             <button class="btn-icon" @click="openModalNucleo(nucleo)"><i class="bi bi-pencil"></i></button>
-            <button class="btn-icon danger" @click="confirmDel={fn:()=>delNucleo(nucleo.id)}"><i class="bi bi-trash"></i></button>
+            <button class="btn-icon danger" @click="confirmDel={fn:()=>delNucleo(nucleo.id)}"><i
+                class="bi bi-trash"></i></button>
           </div>
         </div>
       </div>
@@ -392,14 +411,17 @@
       <div v-for="(fp, idx) in finFechamento" :key="fp.profId" class="prof-fechamento-card mb-2">
         <!-- Cabeçalho clicável -->
         <div class="pfc-header" @click="toggleProfDetalhe(fp.profId)">
-          <div class="avatar" style="width:38px;height:38px;font-size:.9rem;flex-shrink:0;background:var(--chess-cream);border:2px solid var(--chess-gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;color:var(--chess-dark-brown)">{{ fp.nome[0] }}</div>
+          <div class="avatar"
+            style="width:38px;height:38px;font-size:.9rem;flex-shrink:0;background:var(--chess-cream);border:2px solid var(--chess-gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;color:var(--chess-dark-brown)">
+            {{ fp.nome[0] }}</div>
           <div style="flex:1;min-width:0">
             <div class="fp-nome">{{ fp.nome }}</div>
             <div class="fp-detalhe">{{ fp.numAulas }} aula(s) · peso médio {{ fp.pesoMedio.toFixed(2) }}</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <div class="fp-valor">R$ {{ fp.total.toFixed(2) }}</div>
-            <i class="bi" :class="profDetalheAberto[fp.profId] ? 'bi-chevron-up' : 'bi-chevron-down'" style="color:var(--text-muted);font-size:0.8rem"></i>
+            <i class="bi" :class="profDetalheAberto[fp.profId] ? 'bi-chevron-up' : 'bi-chevron-down'"
+              style="color:var(--text-muted);font-size:0.8rem"></i>
           </div>
         </div>
         <!-- Detalhe por núcleo (expansível) -->
@@ -414,8 +436,7 @@
           </div>
           <!-- barra de proporção por núcleo -->
           <div class="pfc-bar-area">
-            <div v-for="nn in fp.porNucleo" :key="'bar-'+nn.nucleoId"
-              class="pfc-bar-seg"
+            <div v-for="nn in fp.porNucleo" :key="'bar-'+nn.nucleoId" class="pfc-bar-seg"
               :style="{width: fp.total > 0 ? (nn.valor/fp.total*100)+'%' : '0%', background: nn.cor}"
               :title="nn.nome + ': R$ ' + nn.valor.toFixed(2)">
             </div>
@@ -452,8 +473,10 @@
               <div class="aula-nucleo">{{ getNucleoNome(aula.nucleoId) }}</div>
             </div>
             <div class="d-flex gap-2 align-items-center">
-              <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ calcTotal(aula).toFixed(2) }}</div>
-              <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill" style="color:var(--chess-gold)"></i></button>
+              <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{
+                calcTotal(aula).toFixed(2) }}</div>
+              <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill"
+                  style="color:var(--chess-gold)"></i></button>
             </div>
           </div>
           <div class="aula-card-body">
@@ -471,14 +494,17 @@
             <span>{{ grupo.nome }}</span>
             <span class="nucleo-group-total">R$ {{ grupo.total.toFixed(2) }}</span>
           </div>
-          <div v-for="aula in grupo.aulas" :key="aula.id" class="aula-card" style="margin-bottom:6px;border-radius:0 0 8px 8px;margin-top:0">
+          <div v-for="aula in grupo.aulas" :key="aula.id" class="aula-card"
+            style="margin-bottom:6px;border-radius:0 0 8px 8px;margin-top:0">
             <div class="aula-card-header" style="background:white">
               <div>
                 <div class="aula-date">{{ formatDate(aula.data) }}</div>
               </div>
               <div class="d-flex gap-2 align-items-center">
-                <div style="font-family:'DM Serif Display',serif;font-size:1rem;color:var(--chess-green)">R$ {{ calcTotal(aula).toFixed(2) }}</div>
-                <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill" style="color:var(--chess-gold)"></i></button>
+                <div style="font-family:'DM Serif Display',serif;font-size:1rem;color:var(--chess-green)">R$ {{
+                  calcTotal(aula).toFixed(2) }}</div>
+                <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill"
+                    style="color:var(--chess-gold)"></i></button>
               </div>
             </div>
             <div class="aula-card-body" style="padding:8px 14px">
@@ -496,7 +522,8 @@
     <div class="modal-backdrop-custom" v-if="modals.prof" @click.self="modals.prof=false">
       <div class="modal-sheet">
         <div class="modal-handle"></div>
-        <div class="modal-title"><i class="bi bi-person-badge-fill"></i> {{ form.prof.id ? 'Editar' : 'Novo' }} Professor</div>
+        <div class="modal-title"><i class="bi bi-person-badge-fill"></i> {{ form.prof.id ? 'Editar' : 'Novo' }}
+          Professor</div>
         <div class="mb-3">
           <label class="form-label">Nome</label>
           <input class="form-control" v-model="form.prof.nome" placeholder="Nome completo" />
@@ -529,7 +556,8 @@
         </div>
         <div class="d-flex gap-2">
           <button class="btn btn-outline-secondary flex-fill" @click="modals.prof=false">Cancelar</button>
-          <button class="btn-gold flex-fill justify-content-center" @click="salvarProf"><i class="bi bi-check-lg"></i> Salvar</button>
+          <button class="btn-gold flex-fill justify-content-center" @click="salvarProf"><i class="bi bi-check-lg"></i>
+            Salvar</button>
         </div>
       </div>
     </div>
@@ -549,11 +577,13 @@
         </div>
         <div class="mb-3">
           <label class="form-label">Valor padrão da aula (R$)</label>
-          <input class="form-control" v-model.number="form.aluno.valorPadrao" type="number" min="0" step="0.50" placeholder="15.00" />
+          <input class="form-control" v-model.number="form.aluno.valorPadrao" type="number" min="0" step="0.50"
+            placeholder="15.00" />
         </div>
         <div class="mb-3">
           <label class="form-label">Observações</label>
-          <textarea class="form-control" v-model="form.aluno.observacoes" rows="2" placeholder="Ex: desconto, bolsista..."></textarea>
+          <textarea class="form-control" v-model="form.aluno.observacoes" rows="2"
+            placeholder="Ex: desconto, bolsista..."></textarea>
         </div>
         <div class="mb-4">
           <div class="form-check form-switch">
@@ -563,7 +593,8 @@
         </div>
         <div class="d-flex gap-2">
           <button class="btn btn-outline-secondary flex-fill" @click="modals.aluno=false">Cancelar</button>
-          <button class="btn-gold flex-fill justify-content-center" @click="salvarAluno"><i class="bi bi-check-lg"></i> Salvar</button>
+          <button class="btn-gold flex-fill justify-content-center" @click="salvarAluno"><i class="bi bi-check-lg"></i>
+            Salvar</button>
         </div>
       </div>
     </div>
@@ -572,7 +603,8 @@
     <div class="modal-backdrop-custom" v-if="modals.nucleo" @click.self="modals.nucleo=false">
       <div class="modal-sheet">
         <div class="modal-handle"></div>
-        <div class="modal-title"><i class="bi bi-geo-alt-fill"></i> {{ form.nucleo.id ? 'Editar' : 'Novo' }} Núcleo</div>
+        <div class="modal-title"><i class="bi bi-geo-alt-fill"></i> {{ form.nucleo.id ? 'Editar' : 'Novo' }} Núcleo
+        </div>
         <div class="mb-3">
           <label class="form-label">Nome</label>
           <input class="form-control" v-model="form.nucleo.nome" placeholder="Ex: Cesar Maingha" />
@@ -587,7 +619,8 @@
         </div>
         <div class="d-flex gap-2">
           <button class="btn btn-outline-secondary flex-fill" @click="modals.nucleo=false">Cancelar</button>
-          <button class="btn-gold flex-fill justify-content-center" @click="salvarNucleo"><i class="bi bi-check-lg"></i> Salvar</button>
+          <button class="btn-gold flex-fill justify-content-center" @click="salvarNucleo"><i class="bi bi-check-lg"></i>
+            Salvar</button>
         </div>
       </div>
     </div>
@@ -596,7 +629,8 @@
     <div class="modal-backdrop-custom" v-if="modals.aula" @click.self="modals.aula=false">
       <div class="modal-sheet">
         <div class="modal-handle"></div>
-        <div class="modal-title"><i class="bi bi-journal-plus"></i> {{ form.aula.id ? 'Editar' : 'Registrar' }} Aula</div>
+        <div class="modal-title"><i class="bi bi-journal-plus"></i> {{ form.aula.id ? 'Editar' : 'Registrar' }} Aula
+        </div>
 
         <div class="mb-3">
           <label class="form-label">Data</label>
@@ -615,10 +649,12 @@
           <label class="form-label d-block">Professores presentes</label>
           <div class="toggle-group">
             <span v-for="prof in professoresAtivos" :key="prof.id" class="toggle-pill"
-              :class="{selected: aulaHasProf(prof.id)}" @click="toggleProfAula(prof.id, prof.peso)">{{ prof.nome }}</span>
+              :class="{selected: aulaHasProf(prof.id)}" @click="toggleProfAula(prof.id, prof.peso)">{{ prof.nome
+              }}</span>
           </div>
           <div class="mt-2" v-if="form.aula.professores.length>0">
-            <div v-for="ap in form.aula.professores" :key="ap.professorId" style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px">
+            <div v-for="ap in form.aula.professores" :key="ap.professorId"
+              style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px">
               <strong>{{ getProfNome(ap.professorId) }}</strong> — peso {{ ap.pesoAplicado }}
             </div>
           </div>
@@ -626,7 +662,8 @@
 
         <div class="mb-3">
           <label class="form-label">Alunos — presença e pagamento</label>
-          <div v-if="alunosAtivos.length===0" style="font-size:0.82rem;color:var(--text-muted)">Nenhum aluno ativo cadastrado.</div>
+          <div v-if="alunosAtivos.length===0" style="font-size:0.82rem;color:var(--text-muted)">Nenhum aluno ativo
+            cadastrado.</div>
           <div v-for="al in alunosAtivosForm" :key="al.id" class="aluno-check-item">
             <input type="checkbox" class="form-check-input" style="width:20px;height:20px" :id="'al-'+al.id"
               :checked="aulaAlunoPresente(al.id)"
@@ -634,15 +671,18 @@
             <label :for="'al-'+al.id" class="nome">{{ al.nome }}</label>
             <!-- indicador de pagamento -->
             <div class="pag-status-toggle" v-if="aulaAlunoPresente(al.id)">
-              <button class="pst-btn" :class="{active: getAlunoPago(al.id)}" @click="setAlunoPago(al.id, true)" title="Pago">
+              <button class="pst-btn" :class="{active: getAlunoPago(al.id)}" @click="setAlunoPago(al.id, true)"
+                title="Pago">
                 <i class="bi bi-check-circle-fill"></i>
               </button>
-              <button class="pst-btn pending" :class="{active: !getAlunoPago(al.id)}" @click="setAlunoPago(al.id, false)" title="Pendente">
+              <button class="pst-btn pending" :class="{active: !getAlunoPago(al.id)}"
+                @click="setAlunoPago(al.id, false)" title="Pendente">
                 <i class="bi bi-clock-fill"></i>
               </button>
             </div>
             <input class="valor-input" type="number" min="0" step="0.50" :value="getAlunoValor(al.id)"
-              @input="setAlunoValor(al.id, $event.target.value)" :disabled="!aulaAlunoPresente(al.id)" placeholder="R$" />
+              @input="setAlunoValor(al.id, $event.target.value)" :disabled="!aulaAlunoPresente(al.id)"
+              placeholder="R$" />
           </div>
         </div>
 
@@ -664,7 +704,8 @@
 
         <div class="d-flex gap-2">
           <button class="btn btn-outline-secondary flex-fill" @click="modals.aula=false">Cancelar</button>
-          <button class="btn-gold flex-fill justify-content-center" @click="salvarAula"><i class="bi bi-check-lg"></i> Salvar Aula</button>
+          <button class="btn-gold flex-fill justify-content-center" @click="salvarAula"><i class="bi bi-check-lg"></i>
+            Salvar Aula</button>
         </div>
       </div>
     </div>
@@ -674,9 +715,11 @@
       <div class="modal-sheet">
         <div class="modal-handle"></div>
         <div class="modal-title"><i class="bi bi-pie-chart-fill"></i> Divisão Financeira</div>
-        <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px">{{ formatDate(aulaFinanceiro.data) }} — {{ getNucleoNome(aulaFinanceiro.nucleoId) }}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px">{{ formatDate(aulaFinanceiro.data) }} —
+          {{ getNucleoNome(aulaFinanceiro.nucleoId) }}</div>
 
-        <div class="card-header-custom mb-0" style="border-radius:8px 8px 0 0;font-size:.85rem"><i class="bi bi-person-check"></i> Presenças</div>
+        <div class="card-header-custom mb-0" style="border-radius:8px 8px 0 0;font-size:.85rem"><i
+            class="bi bi-person-check"></i> Presenças</div>
         <div class="card p-0 mb-3" style="border-radius:0 0 8px 8px">
           <div v-for="aa in aulaFinanceiro.alunos.filter(a=>a.presente)" :key="aa.alunoId"
             style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);font-size:0.85rem">
@@ -686,7 +729,8 @@
               <span style="color:var(--chess-green);font-weight:600">R$ {{ aa.valorPago.toFixed(2) }}</span>
             </div>
           </div>
-          <div v-if="!aulaFinanceiro.alunos.some(a=>a.presente)" style="padding:12px 14px;font-size:.8rem;color:var(--text-muted);text-align:center">
+          <div v-if="!aulaFinanceiro.alunos.some(a=>a.presente)"
+            style="padding:12px 14px;font-size:.8rem;color:var(--text-muted);text-align:center">
             Nenhum aluno presente.
           </div>
         </div>
@@ -702,17 +746,20 @@
           </div>
         </div>
 
-        <div class="card-header-custom mb-0" style="border-radius:8px 8px 0 0;font-size:.85rem"><i class="bi bi-cash-coin"></i> Pagamento dos Professores</div>
+        <div class="card-header-custom mb-0" style="border-radius:8px 8px 0 0;font-size:.85rem"><i
+            class="bi bi-cash-coin"></i> Pagamento dos Professores</div>
         <div class="card p-0 mb-3" style="border-radius:0 0 8px 8px">
           <div v-for="ap in aulaFinanceiro.professores" :key="ap.professorId" class="prof-pag-item">
-            <div class="avatar" style="width:36px;height:36px;font-size:.85rem">{{ getProfNome(ap.professorId)[0] }}</div>
+            <div class="avatar" style="width:36px;height:36px;font-size:.85rem">{{ getProfNome(ap.professorId)[0] }}
+            </div>
             <div class="info">
               <div class="nome" style="font-size:.85rem">{{ getProfNome(ap.professorId) }}</div>
               <div class="meta">Peso {{ ap.pesoAplicado }}{{ ap.pesoAplicado===0 ? ' (observador)' : '' }}</div>
             </div>
             <div class="pag-valor">R$ {{ (ap.pesoAplicado * calcValorPorPeso(aulaFinanceiro)).toFixed(2) }}</div>
           </div>
-          <div v-if="aulaFinanceiro.professores.length===0" style="padding:12px 14px;font-size:.8rem;color:var(--text-muted);text-align:center">
+          <div v-if="aulaFinanceiro.professores.length===0"
+            style="padding:12px 14px;font-size:.8rem;color:var(--text-muted);text-align:center">
             Nenhum professor nesta aula.
           </div>
         </div>
@@ -728,20 +775,28 @@
         <div class="modal-title"><i class="bi bi-database-fill"></i> Dados</div>
 
         <div style="display:flex;gap:8px;margin-bottom:20px">
-          <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
-            <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{ aulas.length }}</div>
+          <div
+            style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{
+              aulas.length }}</div>
             <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase">Aulas</div>
           </div>
-          <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
-            <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{ professores.length }}</div>
+          <div
+            style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{
+              professores.length }}</div>
             <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase">Profs</div>
           </div>
-          <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
-            <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{ alunos.length }}</div>
+          <div
+            style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{
+              alunos.length }}</div>
             <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase">Alunos</div>
           </div>
-          <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
-            <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{ nucleos.length }}</div>
+          <div
+            style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{
+              nucleos.length }}</div>
             <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase">Núcleos</div>
           </div>
         </div>
@@ -761,7 +816,8 @@
             <div class="do-sub">Restaura dados de um arquivo exportado anteriormente</div>
           </div>
         </button>
-        <input ref="importInput" type="file" accept=".json,application/json" style="display:none" @change="importarJSON($event)" />
+        <input ref="importInput" type="file" accept=".json,application/json" style="display:none"
+          @change="importarJSON($event)" />
 
         <button class="dados-option" @click="abrirCompartilharMes">
           <div class="do-icon gold"><i class="bi bi-share"></i></div>
@@ -771,7 +827,8 @@
           </div>
         </button>
 
-        <button class="dados-option" @click="confirmDel={fn: limparTudo}; modals.dados=false" style="border-color:#fdecea">
+        <button class="dados-option" @click="confirmDel={fn: limparTudo}; modals.dados=false"
+          style="border-color:#fdecea">
           <div class="do-icon red"><i class="bi bi-trash3"></i></div>
           <div>
             <div class="do-title" style="color:var(--chess-red)">Limpar todos os dados</div>
@@ -795,13 +852,16 @@
           <button class="mes-btn" @click="shareMesOffset++" :disabled="shareMesOffset>=0">›</button>
         </div>
 
-        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:0.8rem;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;max-height:320px;overflow-y:auto;font-family:monospace" v-text="textoCompartilhar"></div>
+        <div
+          style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:0.8rem;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;max-height:320px;overflow-y:auto;font-family:monospace"
+          v-text="textoCompartilhar"></div>
 
         <div class="d-flex gap-2 mt-3">
           <button class="btn btn-outline-secondary flex-fill" @click="copiarTexto">
             <i class="bi bi-clipboard"></i> Copiar
           </button>
-          <button class="btn-gold flex-fill justify-content-center" @click="compartilharNativo" v-if="podeCompartilharNativo">
+          <button class="btn-gold flex-fill justify-content-center" @click="compartilharNativo"
+            v-if="podeCompartilharNativo">
             <i class="bi bi-share"></i> Compartilhar
           </button>
         </div>
@@ -1084,7 +1144,7 @@
         });
 
         // Paleta de cores para os núcleos nas barras
-        const NUCLEO_COLORS = ['#c9a84c','#2e7d32','#1565c0','#7b1fa2','#e65100','#00838f','#558b2f','#d84315'];
+        const NUCLEO_COLORS = ['#c9a84c', '#2e7d32', '#1565c0', '#7b1fa2', '#e65100', '#00838f', '#558b2f', '#d84315'];
 
         const finFechamento = computed(() => {
           const map = {}; // profId -> { ..., nucleoMap: { nucleoId -> { valor, numAulas } } }
@@ -1471,4 +1531,5 @@
     }).mount('#app');
   </script>
 </body>
+
 </html>
