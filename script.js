@@ -41,6 +41,7 @@ createApp({
         const finMesOffset = ref(0);
         const finAgrupamento = ref('lista');
         const pendMesOffset = ref(0);
+        const aulaMesOffset = ref(0);
 
         const professores = reactive(saved.professores || []);
         const alunos = reactive(saved.alunos || []);
@@ -70,15 +71,79 @@ createApp({
             return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
         });
         const aulasMes = computed(() => aulasSorted.value.filter(a => aulaInMonth(a, homeRef.value.year, homeRef.value.month)));
+        const aulasMesPorNucleo = computed(() => {
+            const map = {};
+            for (const aula of aulasMes.value) {
+                const id = aula.nucleoId || '__sem_nucleo__';
+                if (!map[id]) map[id] = { nucleoId: id, nome: getNucleoNome(aula.nucleoId), aulas: [], total: 0 };
+                map[id].aulas.push(aula);
+                map[id].total += calcTotal(aula);
+            }
+            return Object.values(map).sort((a, b) => b.total - a.total);
+        });
         const totalMes = computed(() => aulasMes.value.reduce((s, a) => s + calcTotal(a), 0));
         const totalPresencasMes = computed(() => aulasMes.value.reduce((s, a) => s + alunosPresentes(a), 0));
 
-        // ── PENDÊNCIAS ──
+        // ── AULAS VIEW ──
+        const aulaViewRef = computed(() => getMonthRef(aulaMesOffset.value));
+        const aulaMesLabel = computed(() => {
+            const d = new Date(aulaViewRef.value.year, aulaViewRef.value.month, 1);
+            return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        });
+        const aulasSortedMes = computed(() => aulasSorted.value.filter(a => aulaInMonth(a, aulaViewRef.value.year, aulaViewRef.value.month)));
+        const aulasSortedMesPorNucleo = computed(() => {
+            const map = {};
+            for (const aula of aulasSortedMes.value) {
+                const id = aula.nucleoId || '__sem_nucleo__';
+                if (!map[id]) map[id] = { nucleoId: id, nome: getNucleoNome(aula.nucleoId), aulas: [], total: 0 };
+                map[id].aulas.push(aula);
+                map[id].total += calcTotal(aula);
+            }
+            return Object.values(map).sort((a, b) => b.total - a.total);
+        });
+
+
+        // Mês encerrado = estritamente anterior ao mês atual
+        const mesEncerrado = (aulaData) => {
+            if (!aulaData) return false;
+            const now = new Date();
+            const [y, m] = aulaData.split('-').map(Number);
+            return y < now.getFullYear() || (y === now.getFullYear() && (m - 1) < now.getMonth());
+        };
+
         const todasPendencias = computed(() => {
             const map = {};
             for (const aula of aulas) {
+                if (!mesEncerrado(aula.data)) continue; // mês ainda não encerrado: não é pendência
                 for (const aa of aula.alunos) {
                     if (aa.presente && !aa.pago) {
+                        if (!map[aa.alunoId]) {
+                            const alunoObj = alunos.find(a => a.id === aa.alunoId);
+                            const respObj = alunoObj && alunoObj.responsavelId ? responsaveis.find(r => r.id === alunoObj.responsavelId) : null;
+                            map[aa.alunoId] = {
+                                alunoId: aa.alunoId,
+                                nome: getAlunoNome(aa.alunoId),
+                                responsavel: respObj ? respObj.nome : null,
+                                responsavelTel: respObj ? respObj.telefone : null,
+                                aulas: [],
+                                total: 0
+                            };
+                        }
+                        map[aa.alunoId].aulas.push({ aulaId: aula.id, data: aula.data, nucleoId: aula.nucleoId, valor: aa.valorPago || 0 });
+                        map[aa.alunoId].total += aa.valorPago || 0;
+                    }
+                }
+            }
+            return Object.values(map).sort((a, b) => b.total - a.total);
+        });
+
+        // Pendências já pagas (de meses encerrados)
+        const todasPendenciasPagas = computed(() => {
+            const map = {};
+            for (const aula of aulas) {
+                if (!mesEncerrado(aula.data)) continue;
+                for (const aa of aula.alunos) {
+                    if (aa.presente && aa.pago) {
                         if (!map[aa.alunoId]) {
                             const alunoObj = alunos.find(a => a.id === aa.alunoId);
                             const respObj = alunoObj && alunoObj.responsavelId ? responsaveis.find(r => r.id === alunoObj.responsavelId) : null;
@@ -108,10 +173,29 @@ createApp({
             const d = new Date(pendRef.value.year, pendRef.value.month, 1);
             return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
         });
+
+        const pendTab = ref('abertas'); // 'abertas' | 'pagas'
+
         const pendenciasFiltradas = computed(() => {
-            if (pendMesOffset.value === null) return todasPendencias.value;
+            const fonte = pendTab.value === 'pagas' ? todasPendenciasPagas.value : todasPendencias.value;
+            if (pendMesOffset.value === null) return fonte;
             const { year, month } = pendRef.value;
-            return todasPendencias.value
+            return fonte
+                .map(pa => ({
+                    ...pa,
+                    aulas: pa.aulas.filter(item => {
+                        const [y, m] = item.data.split('-').map(Number);
+                        return y === year && (m - 1) === month;
+                    })
+                }))
+                .filter(pa => pa.aulas.length > 0)
+                .map(pa => ({ ...pa, total: pa.aulas.reduce((s, i) => s + i.valor, 0) }));
+        });
+
+        const pendenciasPagasFiltradas = computed(() => {
+            if (pendMesOffset.value === null) return todasPendenciasPagas.value;
+            const { year, month } = pendRef.value;
+            return todasPendenciasPagas.value
                 .map(pa => ({
                     ...pa,
                     aulas: pa.aulas.filter(item => {
@@ -415,11 +499,13 @@ createApp({
             view, toast, confirmDel, modals, form,
             professores, alunos, nucleos, aulas, responsaveis,
             professoresAtivos, alunosAtivos, responsaveisAtivos, alunosAtivosForm, aulasSorted,
-            mesOffset, mesAtualLabel, aulasMes, totalMes, totalPresencasMes,
+            mesOffset, mesAtualLabel, aulasMes, aulasMesPorNucleo, totalMes, totalPresencasMes,
+            aulaMesOffset, aulaMesLabel, aulasSortedMes, aulasSortedMesPorNucleo,
             finMesOffset, finMesLabel, finAulasMes, finTotal, finTotalPresencas, finFechamento,
             finPorNucleo, finAulasPorNucleo, finAgrupamento,
             profDetalheAberto, toggleProfDetalhe,
-            pendMesOffset, pendMesLabel, pendenciasFiltradas, todasPendencias,
+            pendMesOffset, pendMesLabel, pendTab, pendenciasFiltradas, pendenciasPagasFiltradas,
+            todasPendencias, todasPendenciasPagas,
             totalPendenciasGeral, totalPendenciasGeralValor,
             pendenciasDoMes, totalPendenciasMes,
             aulaTempendencia, contarPendenciasAula, getPendenciasAluno,

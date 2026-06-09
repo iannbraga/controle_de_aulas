@@ -91,20 +91,21 @@
         <button class="btn-gold" @click="view='aulas'" style="padding:6px 12px;font-size:.78rem">Ver todas</button>
       </div>
       <div v-if="aulasMes.length===0" class="empty-state"><i class="bi bi-journal-x"></i> Nenhuma aula neste mês.</div>
-      <div v-for="aula in aulasMes" :key="aula.id" class="aula-card">
-        <div class="aula-card-header">
-          <div>
-            <div class="aula-date">{{ formatDate(aula.data) }}</div>
-            <div class="aula-nucleo">{{ getNucleoNome(aula.nucleoId) }}</div>
+      <div v-for="grupo in aulasMesPorNucleo" :key="grupo.nucleoId" class="mb-3">
+        <div class="nucleo-group-header"><i class="bi bi-geo-alt-fill"></i><span>{{ grupo.nome }}</span><span class="nucleo-group-total">R$ {{ grupo.total.toFixed(2) }}</span></div>
+        <div v-for="aula in grupo.aulas" :key="aula.id" class="aula-card" style="margin-bottom:6px;margin-top:0;border-radius:0 0 8px 8px">
+          <div class="aula-card-header">
+            <div>
+              <div class="aula-date">{{ formatDate(aula.data) }}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ calcTotal(aula).toFixed(2) }}</div>
+              <div style="font-size:.7rem;color:var(--text-muted)">{{ alunosPresentes(aula) }} alunos</div>
+            </div>
           </div>
-          <div style="text-align:right">
-            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{
-              calcTotal(aula).toFixed(2) }}</div>
-            <div style="font-size:.7rem;color:var(--text-muted)">{{ alunosPresentes(aula) }} alunos</div>
+          <div class="aula-card-body">
+            <div class="aula-stat"><i class="bi bi-people-fill"></i> {{ getProfNomes(aula) }}</div>
           </div>
-        </div>
-        <div class="aula-card-body">
-          <div class="aula-stat"><i class="bi bi-people-fill"></i> {{ getProfNomes(aula) }}</div>
         </div>
       </div>
     </div>
@@ -115,33 +116,34 @@
         <div class="section-title">Aulas</div>
         <button class="btn-gold" @click="openNovaAula"><i class="bi bi-plus-lg"></i> Nova</button>
       </div>
-      <div v-if="aulasSorted.length===0" class="empty-state"><i class="bi bi-journal-x"></i> Nenhuma aula
-        registrada.<br><span style="font-size:.8rem">Toque em "Nova" para começar.</span></div>
-      <div v-for="aula in aulasSorted" :key="aula.id" class="aula-card">
-        <div class="aula-card-header">
-          <div>
-            <div class="aula-date">{{ formatDate(aula.data) }}</div>
-            <div class="aula-nucleo">{{ getNucleoNome(aula.nucleoId) }}</div>
+      <div class="mes-nav">
+        <button class="mes-btn" @click="aulaMesOffset--">‹</button>
+        <div class="mes-label">{{ aulaMesLabel }}</div>
+        <button class="mes-btn" @click="aulaMesOffset++" :disabled="aulaMesOffset>=0">›</button>
+      </div>
+      <div v-if="aulasSortedMes.length===0" class="empty-state"><i class="bi bi-journal-x"></i> Nenhuma aula neste mês.<br><span style="font-size:.8rem">Toque em "Nova" para começar.</span></div>
+      <div v-for="grupo in aulasSortedMesPorNucleo" :key="grupo.nucleoId" class="mb-3">
+        <div class="nucleo-group-header"><i class="bi bi-geo-alt-fill"></i><span>{{ grupo.nome }}</span><span class="nucleo-group-total">R$ {{ grupo.total.toFixed(2) }}</span></div>
+        <div v-for="aula in grupo.aulas" :key="aula.id" class="aula-card" style="margin-bottom:6px;margin-top:0;border-radius:0 0 8px 8px">
+          <div class="aula-card-header">
+            <div>
+              <div class="aula-date">{{ formatDate(aula.data) }}</div>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+              <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ calcTotal(aula).toFixed(2) }}</div>
+              <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill" style="color:var(--chess-gold)"></i></button>
+              <button class="btn-icon" @click="editarAula(aula)"><i class="bi bi-pencil"></i></button>
+              <button class="btn-icon danger" @click="confirmDel={fn:()=>delAula(aula.id)}"><i class="bi bi-trash"></i></button>
+            </div>
           </div>
-          <div class="d-flex gap-2 align-items-center">
-            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{
-              calcTotal(aula).toFixed(2) }}</div>
-            <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill"
-                style="color:var(--chess-gold)"></i></button>
-            <button class="btn-icon" @click="editarAula(aula)"><i class="bi bi-pencil"></i></button>
-            <button class="btn-icon danger" @click="confirmDel={fn:()=>delAula(aula.id)}"><i
-                class="bi bi-trash"></i></button>
+          <div class="aula-card-body">
+            <div class="aula-stat mb-1"><i class="bi bi-people-fill"></i> {{ getProfNomes(aula) }}</div>
+            <div class="aula-stat"><i class="bi bi-person-check"></i> {{ alunosPresentes(aula) }} aluno(s) presente(s)</div>
+            <div v-if="aulaTempendencia(aula)" class="aula-stat mt-1" style="color:#e65100">
+              <i class="bi bi-exclamation-circle-fill"></i> {{ contarPendenciasAula(aula) }} pendência(s) nesta aula
+            </div>
+            <div v-if="aula.observacoes" class="aula-stat mt-1"><i class="bi bi-chat-left-text"></i> {{ aula.observacoes }}</div>
           </div>
-        </div>
-        <div class="aula-card-body">
-          <div class="aula-stat mb-1"><i class="bi bi-people-fill"></i> {{ getProfNomes(aula) }}</div>
-          <div class="aula-stat"><i class="bi bi-person-check"></i> {{ alunosPresentes(aula) }} aluno(s) presente(s)
-          </div>
-          <div v-if="aulaTempendencia(aula)" class="aula-stat mt-1" style="color:#e65100">
-            <i class="bi bi-exclamation-circle-fill"></i> {{ contarPendenciasAula(aula) }} pendência(s) nesta aula
-          </div>
-          <div v-if="aula.observacoes" class="aula-stat mt-1"><i class="bi bi-chat-left-text"></i> {{ aula.observacoes
-            }}</div>
         </div>
       </div>
     </div>
@@ -150,13 +152,34 @@
     <div class="main-view" v-if="view==='pendencias'">
       <div class="section-header">
         <div class="section-title">Pendências</div>
-        <div v-if="totalPendenciasGeral > 0"
+        <div v-if="totalPendenciasGeralValor > 0"
           style="font-family:'DM Serif Display',serif;font-size:1rem;color:var(--chess-red)">
           R$ {{ totalPendenciasGeralValor.toFixed(2) }}
         </div>
       </div>
+
+      <!-- Tabs abertas / pagas -->
+      <div class="fin-tabs mb-2">
+        <button class="fin-tab" :class="{active: pendTab==='abertas'}" @click="pendTab='abertas'">
+          <i class="bi bi-clock-fill"></i> Em aberto
+          <span v-if="todasPendencias.length > 0" style="margin-left:4px;background:var(--chess-red);color:#fff;border-radius:99px;padding:1px 7px;font-size:.7rem">{{ todasPendencias.length }}</span>
+        </button>
+        <button class="fin-tab" :class="{active: pendTab==='pagas'}" @click="pendTab='pagas'">
+          <i class="bi bi-check-circle-fill"></i> Pagas
+        </button>
+      </div>
+
+      <!-- Saldo total (só na aba abertas) -->
+      <div v-if="pendTab==='abertas' && pendenciasFiltradas.length > 0" class="total-box mb-3" style="padding:12px 16px">
+        <div>
+          <div style="font-size:.7rem;color:#aaa;text-transform:uppercase;letter-spacing:.05em">Saldo pendente</div>
+          <div class="t-valor" style="color:var(--chess-red)">R$ {{ pendenciasFiltradas.reduce((s,p)=>s+p.total,0).toFixed(2) }}</div>
+        </div>
+        <i class="bi bi-exclamation-circle-fill" style="font-size:2rem;color:var(--chess-red);opacity:.4"></i>
+      </div>
+
       <div class="mes-nav mb-0">
-        <button class="mes-btn" @click="pendMesOffset--">‹</button>
+        <button class="mes-btn" @click="pendMesOffset = pendMesOffset === null ? -1 : pendMesOffset - 1">‹</button>
         <div class="mes-label">{{ pendMesOffset === null ? 'Todas' : pendMesLabel }}</div>
         <button class="mes-btn" @click="pendMesOffset !== null && pendMesOffset < 0 ? pendMesOffset++ : null"
           :disabled="pendMesOffset === null || pendMesOffset >= 0">›</button>
@@ -165,11 +188,14 @@
         <button class="btn btn-sm" :class="pendMesOffset===null?'btn-dark':'btn-outline-secondary'"
           @click="pendMesOffset=null" style="font-size:.72rem;margin-top:6px">Todas as pendências</button>
       </div>
+
       <div v-if="pendenciasFiltradas.length===0" class="empty-state">
-        <i class="bi bi-check-circle" style="color:var(--chess-green)"></i>
-        Nenhuma pendência {{ pendMesOffset !== null ? 'neste período' : 'registrada' }}!
+        <i class="bi bi-check-circle" :style="pendTab==='pagas'?'color:var(--chess-green)':''"></i>
+        {{ pendTab==='pagas' ? 'Nenhuma pendência paga' : 'Nenhuma pendência' }} {{ pendMesOffset !== null ? 'neste período' : 'registrada' }}!
       </div>
-      <div v-for="pa in pendenciasFiltradas" :key="pa.alunoId" class="pendencia-card">
+
+      <!-- Cards pendências em aberto -->
+      <div v-if="pendTab==='abertas'" v-for="pa in pendenciasFiltradas" :key="pa.alunoId" class="pendencia-card">
         <div class="pendencia-card-header">
           <div class="avatar-pend">{{ pa.nome[0] }}</div>
           <div style="flex:1;min-width:0">
@@ -200,6 +226,34 @@
           <button class="btn-pend-all" @click="marcarTodosPagos(pa)">
             <i class="bi bi-check-all"></i> Marcar todos como pagos
           </button>
+        </div>
+      </div>
+
+      <!-- Cards pendências pagas -->
+      <div v-if="pendTab==='pagas'" v-for="pa in pendenciasFiltradas" :key="'pago-'+pa.alunoId" class="pendencia-card" style="opacity:.8">
+        <div class="pendencia-card-header">
+          <div class="avatar-pend" style="background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7">{{ pa.nome[0] }}</div>
+          <div style="flex:1;min-width:0">
+            <div class="pend-nome">{{ pa.nome }}</div>
+            <div class="pend-meta" style="color:var(--chess-green)">{{ pa.aulas.length }} aula(s) paga(s)</div>
+            <div v-if="pa.responsavel" class="pend-resp">
+              <i class="bi bi-person-fill"></i> {{ pa.responsavel }}
+              <span v-if="pa.responsavelTel"> · {{ pa.responsavelTel }}</span>
+            </div>
+          </div>
+          <div class="pend-total" style="color:var(--chess-green)">R$ {{ pa.total.toFixed(2) }}</div>
+        </div>
+        <div class="pendencia-card-body">
+          <div v-for="item in pa.aulas" :key="item.aulaId" class="pend-aula-item">
+            <div>
+              <span class="pend-data">{{ formatDate(item.data) }}</span>
+              <span class="pend-nucleo">{{ getNucleoNome(item.nucleoId) }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="pend-valor">R$ {{ item.valor.toFixed(2) }}</span>
+              <span class="badge-pago">Pago</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
