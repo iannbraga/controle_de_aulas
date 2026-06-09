@@ -55,7 +55,7 @@ createApp({
         watch([professores, alunos, nucleos, aulas, responsaveis], persistAll, { deep: true });
 
         const showToast = (msg) => { toast.value = msg; setTimeout(() => toast.value = null, 2400); };
-        const modals = reactive({ prof: false, aluno: false, nucleo: false, aula: false, financeiro: false, dados: false, compartilhar: false, resp: false });
+        const modals = reactive({ prof: false, aluno: false, nucleo: false, aula: false, financeiro: false, dados: false, compartilhar: false, resp: false, respWhats: false });
         const form = reactive({ prof: {}, aluno: {}, nucleo: {}, aula: {}, resp: {} });
         const shareMesOffset = ref(0);
 
@@ -464,7 +464,111 @@ createApp({
         const copiarTexto = () => { navigator.clipboard.writeText(textoCompartilhar.value).then(() => showToast('Texto copiado!')).catch(() => showToast('Não foi possível copiar.')); };
         const compartilharNativo = () => { navigator.share({ title: `Clube de Xadrez — ${shareMesLabel.value}`, text: textoCompartilhar.value }).catch(() => { }); };
 
-        // ── EXPORT / IMPORT ──
+        // ── WHATSAPP RESPONSÁVEL ──
+        const respWhatsTarget = ref(null);   // responsável selecionado
+        const respWhatsMesOffset = ref(0);   // offset do mês escolhido
+
+        const respWhatsRef = computed(() => getMonthRef(respWhatsMesOffset.value));
+        const respWhatsMesLabel = computed(() => {
+            const d = new Date(respWhatsRef.value.year, respWhatsRef.value.month, 1);
+            return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        });
+
+        // Aulas do mês que têm pelo menos um aluno do responsável presente
+        const respWhatsAulas = computed(() => {
+            if (!respWhatsTarget.value) return [];
+            const { year, month } = respWhatsRef.value;
+            const alunosDoResp = alunos.filter(a => a.responsavelId === respWhatsTarget.value.id).map(a => a.id);
+            if (!alunosDoResp.length) return [];
+            return aulasSorted.value
+                .filter(a => aulaInMonth(a, year, month))
+                .map(aula => {
+                    const presentes = aula.alunos.filter(aa => aa.presente && alunosDoResp.includes(aa.alunoId));
+                    return { ...aula, alunosDoResp: presentes };
+                })
+                .filter(a => a.alunosDoResp.length > 0);
+        });
+
+        const respWhatsTotais = computed(() => {
+            let totalAulas = 0, totalValor = 0, totalPendente = 0;
+            for (const aula of respWhatsAulas.value) {
+                totalAulas++;
+                for (const aa of aula.alunosDoResp) {
+                    totalValor += aa.valorPago || 0;
+                    if (!aa.pago) totalPendente += aa.valorPago || 0;
+                }
+            }
+            return { totalAulas, totalValor, totalPendente };
+        });
+
+        const chavePix = ref('xadrez.cesamar@gmail.com');
+
+        const textoWhatsResp = computed(() => {
+            if (!respWhatsTarget.value) return '';
+            const resp = respWhatsTarget.value;
+            const mesLabel = respWhatsMesLabel.value.charAt(0).toUpperCase() + respWhatsMesLabel.value.slice(1);
+            const alunosDoResp = alunos.filter(a => a.responsavelId === resp.id);
+            const sep = '─'.repeat(32);
+            const linhas = [];
+
+            linhas.push(`Mentes em Xeque — Cobrança ${mesLabel}`);
+            linhas.push(`Responsável: ${resp.nome}`);
+            linhas.push(sep);
+
+            let totalGeral = 0;
+
+            for (const al of alunosDoResp) {
+                // Aulas do mês com este aluno presente
+                const aulasDoAluno = respWhatsAulas.value.filter(a =>
+                    a.alunosDoResp.some(aa => aa.alunoId === al.id)
+                );
+                if (!aulasDoAluno.length) continue;
+
+                linhas.push(` ${al.nome}`);
+                let subtotal = 0;
+                for (const aula of aulasDoAluno) {
+                    const aa = aula.alunosDoResp.find(x => x.alunoId === al.id);
+                    const valor = aa ? (aa.valorPago || 0) : 0;
+                    subtotal += valor;
+                    linhas.push(`  ${formatDate(aula.data)} — ${getNucleoNome(aula.nucleoId)} — R$ ${valor.toFixed(2)}`);
+                }
+                linhas.push(`  Subtotal: R$ ${subtotal.toFixed(2)} (${aulasDoAluno.length} aula${aulasDoAluno.length > 1 ? 's' : ''})`);
+                linhas.push(' ');
+                totalGeral += subtotal;
+            }
+
+            linhas.push(sep);
+            linhas.push(`Total: R$ ${totalGeral.toFixed(2)}`);
+            if (chavePix.value.trim()) {
+                linhas.push(`Chave Pix: ${chavePix.value.trim()}`);
+            }
+
+            return linhas.join('\n');
+        });
+
+        const abrirWhatsResp = (resp) => {
+            respWhatsTarget.value = resp;
+            respWhatsMesOffset.value = 0;
+            modals.respWhats = true;
+        };
+
+        const enviarWhatsResp = () => {
+            if (!respWhatsTarget.value) return;
+            const tel = respWhatsTarget.value.telefone?.replace(/\D/g, '') || '';
+            const texto = encodeURIComponent(textoWhatsResp.value);
+            const url = tel
+                ? `https://wa.me/55${tel}?text=${texto}`
+                : `https://wa.me/?text=${texto}`;
+            window.open(url, '_blank');
+        };
+
+        const copiarTextoWhatsResp = () => {
+            navigator.clipboard.writeText(textoWhatsResp.value)
+                .then(() => showToast('Texto copiado!'))
+                .catch(() => showToast('Não foi possível copiar.'));
+        };
+
+
         const exportarJSON = () => {
             const dados = { professores: [...professores], alunos: [...alunos], nucleos: [...nucleos], aulas: [...aulas], responsaveis: [...responsaveis] };
             const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
@@ -517,7 +621,8 @@ createApp({
             getNucleoNome, getProfNome, getAlunoNome, getRespNome, getProfNomes,
             alunosPresentes, formatDate, getAlunosDoResponsavel, getAlunoResponsavel,
             calcTotal, calcPesoTotal, calcValorPorPeso,
-            openModalResp, salvarResp, delResp,
+            openModalResp, salvarResp, delResp, abrirWhatsResp, enviarWhatsResp, copiarTextoWhatsResp,
+            respWhatsTarget, respWhatsMesOffset, respWhatsMesLabel, respWhatsAulas, respWhatsTotais, textoWhatsResp, chavePix,
             openModalProf, applyPesoSugerido, salvarProf, delProf,
             openModalAluno, salvarAluno, delAluno,
             openModalNucleo, salvarNucleo, delNucleo,

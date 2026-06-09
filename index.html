@@ -293,6 +293,7 @@
             <div v-if="resp.observacoes" class="meta mt-1" style="font-style:italic">{{ resp.observacoes }}</div>
           </div>
           <div class="actions">
+            <button class="btn-icon" style="color:#25D366" @click="abrirWhatsResp(resp)" title="Enviar fechamento via WhatsApp"><i class="bi bi-whatsapp"></i></button>
             <button class="btn-icon" @click="openModalResp(resp)"><i class="bi bi-pencil"></i></button>
             <button class="btn-icon danger" @click="confirmDel={fn:()=>delResp(resp.id)}"><i
                 class="bi bi-trash"></i></button>
@@ -914,6 +915,71 @@
           <button class="btn-gold flex-fill justify-content-center" @click="compartilharNativo"
             v-if="podeCompartilharNativo"><i class="bi bi-share"></i> Compartilhar</button>
         </div>
+      </div>
+    </div>
+
+    <!-- MODAL WHATSAPP RESPONSÁVEL -->
+    <div class="modal-backdrop-custom" v-if="modals.respWhats && respWhatsTarget" @click.self="modals.respWhats=false">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title"><i class="bi bi-whatsapp" style="color:#25D366"></i> Fechamento via WhatsApp</div>
+
+        <!-- Responsável + telefone -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 12px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border)">
+          <div class="avatar" style="width:38px;height:38px;font-size:.95rem;flex-shrink:0;background:#fff8e1;border-color:#ffe082;color:#7b4a00">
+            <i class="bi bi-person-badge-fill" style="font-size:.95rem"></i>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:.95rem">{{ respWhatsTarget.nome }}</div>
+            <div style="font-size:.78rem;color:var(--text-muted)" v-if="respWhatsTarget.telefone">
+              <i class="bi bi-phone"></i> {{ respWhatsTarget.telefone }}
+            </div>
+            <div style="font-size:.75rem;color:var(--chess-red)" v-else>
+              <i class="bi bi-exclamation-circle"></i> Sem telefone cadastrado
+            </div>
+          </div>
+        </div>
+
+        <!-- Seleção de mês -->
+        <div class="mes-nav" style="margin-bottom:14px">
+          <button class="mes-btn" @click="respWhatsMesOffset--">‹</button>
+          <div class="mes-label">{{ respWhatsMesLabel }}</div>
+          <button class="mes-btn" @click="respWhatsMesOffset++" :disabled="respWhatsMesOffset>=0">›</button>
+        </div>
+
+        <!-- Preview do texto -->
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:.8rem;line-height:1.75;color:var(--text-primary);white-space:pre-wrap;max-height:280px;overflow-y:auto;font-family:monospace" v-text="textoWhatsResp"></div>
+
+        <!-- Totais resumidos -->
+        <div v-if="respWhatsAulas.length > 0" style="display:flex;gap:8px;margin-top:10px">
+          <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--chess-dark-brown)">{{ respWhatsTotais.totalAulas }}</div>
+            <div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase">Aulas</div>
+          </div>
+          <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--chess-green)">R$ {{ respWhatsTotais.totalValor.toFixed(2) }}</div>
+            <div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase">Total</div>
+          </div>
+          <div v-if="respWhatsTotais.totalPendente > 0" style="flex:1;background:#fff3e0;border:1px solid #ffe082;border-radius:8px;padding:8px;text-align:center">
+            <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--chess-red)">R$ {{ respWhatsTotais.totalPendente.toFixed(2) }}</div>
+            <div style="font-size:.65rem;color:var(--chess-red);text-transform:uppercase">Pendente</div>
+          </div>
+        </div>
+
+        <!-- Chave Pix -->
+        <div style="margin-top:10px">
+          <label style="font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px"><i class="bi bi-qr-code"></i> Chave Pix</label>
+          <input class="form-control form-control-sm" v-model="chavePix" placeholder="Ex: xadrez@gmail.com" style="font-size:.82rem" />
+        </div>
+
+        <!-- Ações -->
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn btn-outline-secondary flex-fill" @click="copiarTextoWhatsResp"><i class="bi bi-clipboard"></i> Copiar</button>
+          <button class="btn flex-fill justify-content-center" style="background:#25D366;color:#fff;border:none;border-radius:10px;font-weight:600;display:flex;align-items:center;gap:6px" @click="enviarWhatsResp">
+            <i class="bi bi-whatsapp"></i> {{ respWhatsTarget.telefone ? 'Abrir WhatsApp' : 'Enviar (sem número)' }}
+          </button>
+        </div>
+        <button class="btn btn-outline-secondary w-100 mt-2" @click="modals.respWhats=false">Fechar</button>
       </div>
     </div>
 
