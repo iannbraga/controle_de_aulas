@@ -406,6 +406,63 @@
       </div>
     </div>
 
+    <!-- ═══════════ RESPONSÁVEIS ═══════════ -->
+    <div class="main-view" v-if="view==='responsaveis'">
+      <div class="section-header">
+        <div class="section-title">Responsáveis</div>
+        <button class="btn-gold" @click="openModalResponsavel(null)"><i class="bi bi-plus-lg"></i> Novo</button>
+      </div>
+
+      <div v-if="responsaveis.length===0" class="empty-state">
+        <i class="bi bi-person-heart"></i>
+        Nenhum responsável cadastrado.<br>
+        <span style="font-size:0.8rem">Cadastre responsáveis e vincule-os aos alunos.</span>
+      </div>
+
+      <div v-for="resp in responsaveis" :key="resp.id" class="aula-card" style="cursor:default">
+        <div class="aula-card-header">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="avatar" style="width:40px;height:40px;font-size:1rem;flex-shrink:0">{{ resp.nome[0] }}</div>
+            <div>
+              <div style="font-weight:600;font-size:0.95rem;color:var(--text-primary)">{{ resp.nome }}</div>
+              <div class="meta d-flex flex-wrap gap-2 mt-1">
+                <span v-if="resp.telefone" style="font-size:0.75rem;color:var(--text-muted)">
+                  <i class="bi bi-phone"></i> {{ resp.telefone }}
+                </span>
+                <span v-if="resp.email" style="font-size:0.75rem;color:var(--text-muted)">
+                  <i class="bi bi-envelope"></i> {{ resp.email }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <button class="btn-icon" @click="openCobranca(resp)" title="Ver cobrança">
+              <i class="bi bi-receipt" style="color:var(--chess-gold)"></i>
+            </button>
+            <button class="btn-icon" @click="openModalResponsavel(resp)"><i class="bi bi-pencil"></i></button>
+            <button class="btn-icon danger" @click="confirmDel={fn:()=>delResponsavel(resp.id)}"><i
+                class="bi bi-trash"></i></button>
+          </div>
+        </div>
+        <!-- Alunos vinculados -->
+        <div class="aula-card-body">
+          <div v-if="getAlunosDoResponsavel(resp.id).length===0" style="font-size:0.78rem;color:var(--text-muted)">
+            <i class="bi bi-info-circle"></i> Nenhum aluno vinculado ainda.
+          </div>
+          <div v-else style="display:flex;flex-wrap:wrap;gap:6px">
+            <span v-for="al in getAlunosDoResponsavel(resp.id)" :key="al.id"
+              style="background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:0.75rem;color:var(--text-secondary)">
+              <i class="bi bi-person-fill" style="font-size:0.65rem"></i> {{ al.nome }}
+            </span>
+          </div>
+          <div v-if="resp.observacoes"
+            style="font-size:0.75rem;color:var(--text-muted);margin-top:6px;font-style:italic">
+            {{ resp.observacoes }}
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══════════ FINANCEIRO ═══════════ -->
     <div class="main-view" v-if="view==='financeiro'">
       <div class="section-header">
@@ -655,6 +712,17 @@
           <label class="form-label">Valor padrão da aula (R$)</label>
           <input class="form-control" v-model.number="form.aluno.valorPadrao" type="number" min="0" step="0.50"
             placeholder="15.00" />
+        </div>
+        <!-- Vínculo com responsável -->
+        <div class="mb-3">
+          <label class="form-label">Responsável (opcional)</label>
+          <select class="form-select" v-model="form.aluno.responsavelId">
+            <option value="">Sem responsável</option>
+            <option v-for="r in responsaveis" :key="r.id" :value="r.id">{{ r.nome }}</option>
+          </select>
+          <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px">
+            <i class="bi bi-info-circle"></i> Vinculando um responsável, ele aparecerá no fechamento de cobrança.
+          </div>
         </div>
         <div class="mb-3">
           <label class="form-label">Observações</label>
