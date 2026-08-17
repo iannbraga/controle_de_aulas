@@ -7,7 +7,7 @@ const ui = useUiStore();
 const catalog = useCatalogStore();
 
 function delResp(id: string): void {
-  ui.askConfirm(() => { catalog.delResp(id); ui.showToast('Responsável removido.'); });
+  ui.askConfirm(async () => { await catalog.delResp(id); ui.showToast('Responsável removido.'); });
 }
 function abrirWhatsResp(resp: Responsavel): void {
   ui.abrirWhatsResp(resp);

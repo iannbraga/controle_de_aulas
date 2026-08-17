@@ -6,7 +6,7 @@ const ui = useUiStore();
 const catalog = useCatalogStore();
 
 function delProf(id: string): void {
-  ui.askConfirm(() => { catalog.delProf(id); ui.showToast('Professor removido.'); });
+  ui.askConfirm(async () => { await catalog.delProf(id); ui.showToast('Professor removido.'); });
 }
 </script>
 

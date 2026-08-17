@@ -35,7 +35,7 @@ function openFinanceiro(aula: Aula): void {
   ui.modals.financeiro = true;
 }
 function delAula(id: string): void {
-  ui.askConfirm(() => { aulasStore.delAula(id); ui.showToast('Aula removida.'); });
+  ui.askConfirm(async () => { await aulasStore.delAula(id); ui.showToast('Aula removida.'); });
 }
 </script>
 

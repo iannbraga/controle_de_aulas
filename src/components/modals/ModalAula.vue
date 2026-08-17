@@ -24,8 +24,8 @@ function onValorInput(alunoId: string, event: Event): void {
   aulasStore.setAlunoValor(alunoId, (event.target as HTMLInputElement).value);
 }
 
-function salvar(): void {
-  const res = aulasStore.salvarAula();
+async function salvar(): Promise<void> {
+  const res = await aulasStore.salvarAula();
   if (!res.ok) { ui.showToast(res.msg!); return; }
   ui.modals.aula = false;
   ui.showToast('Aula registrada!');

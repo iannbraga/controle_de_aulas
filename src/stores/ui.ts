@@ -5,7 +5,7 @@ import type { Professor, Aluno, Nucleo, Responsavel } from '../types/domain';
 export type View = 'home' | 'aulas' | 'pendencias' | 'responsaveis' | 'professores' | 'alunos' | 'nucleos' | 'financeiro';
 
 interface ConfirmDel {
-  fn: () => void;
+  fn: () => void | Promise<void>;
 }
 
 const blankProf = (): Professor => ({ id: '', nome: '', nivel: 'professor', peso: 1.5, ativo: true });
@@ -46,12 +46,18 @@ export const useUiStore = defineStore('ui', () => {
     toastTimer = setTimeout(() => { toast.value = null; }, 2400);
   }
 
-  function askConfirm(fn: () => void): void {
+  function askConfirm(fn: () => void | Promise<void>): void {
     confirmDel.value = { fn };
   }
-  function resolveConfirm(): void {
-    confirmDel.value?.fn();
+  async function resolveConfirm(): Promise<void> {
+    const pending = confirmDel.value;
     confirmDel.value = null;
+    if (!pending) return;
+    try {
+      await pending.fn();
+    } catch {
+      showToast('Ocorreu um erro. Tente novamente.');
+    }
   }
 
   function openModalProf(prof: Professor | null): void {

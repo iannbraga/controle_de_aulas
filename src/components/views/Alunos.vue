@@ -8,7 +8,7 @@ const catalog = useCatalogStore();
 const aulasStore = useAulasStore();
 
 function delAluno(id: string): void {
-  ui.askConfirm(() => { catalog.delAluno(id); ui.showToast('Aluno removido.'); });
+  ui.askConfirm(async () => { await catalog.delAluno(id); ui.showToast('Aluno removido.'); });
 }
 </script>
 

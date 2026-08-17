@@ -1,11 +1,11 @@
 import { computed, reactive, ref } from 'vue';
 import { defineStore } from 'pinia';
 import type { Aula, AulaProfessor, PendenciaAluno } from '../types/domain';
-import { genId, calcTotal, mesEncerrado } from '../lib/helpers';
-import { loadData } from '../lib/persistence';
+import type { AulaRow } from '../types/db';
+import { mesEncerrado } from '../lib/helpers';
+import { supabase } from '../lib/supabase';
+import { aulaFromRow, aulaToRow } from '../lib/mappers';
 import { useCatalogStore } from './catalog';
-
-const saved = loadData();
 
 const blankAula = (): Aula => ({
   id: '',
@@ -17,17 +17,29 @@ const blankAula = (): Aula => ({
 });
 
 export const useAulasStore = defineStore('aulas', () => {
-  const aulas = reactive<Aula[]>(saved.aulas ?? []);
+  const aulas = reactive<Aula[]>([]);
   const form = reactive<Aula>(blankAula());
   const profDetalheAberto = reactive<Record<string, boolean>>({});
   const chavePix = ref('xadrez.cesamar@gmail.com');
   const aulaFinanceiro = ref<Aula | null>(null);
+  const loading = ref(false);
 
   function openFinanceiro(aula: Aula): void {
     aulaFinanceiro.value = aula;
   }
 
   const aulasSorted = computed(() => [...aulas].sort((a, b) => b.data.localeCompare(a.data)));
+
+  async function fetchAll(): Promise<void> {
+    loading.value = true;
+    const { data, error } = await supabase.from('aulas').select('*').order('data', { ascending: false });
+    if (!error && data) aulas.splice(0, aulas.length, ...(data as AulaRow[]).map(aulaFromRow));
+    loading.value = false;
+  }
+
+  function limparEstadoLocal(): void {
+    aulas.splice(0);
+  }
 
   // ── Formulário / CRUD ──
   function openNovaAula(): void {
@@ -41,7 +53,7 @@ export const useAulasStore = defineStore('aulas', () => {
     const catalog = useCatalogStore();
     const idsJaExistem = new Set(clone.alunos.map(a => a.alunoId));
     for (const al of catalog.alunos.filter(a => a.ativo)) {
-      if (!idsJaExistem.has(al.id)) clone.alunos.push({ alunoId: al.id, valorPago: al.valorPadrao, presente: false, pago: true });
+      if (!idsJaExistem.has(al.id)) clone.alunos.push({ alunoId: al.id, valorPago: al.valorPadrao, presente: false, pago: false });
     }
     Object.assign(form, clone);
   }
@@ -62,7 +74,7 @@ export const useAulasStore = defineStore('aulas', () => {
   }
   function getAlunoPago(alunoId: string): boolean {
     const al = form.alunos.find(a => a.alunoId === alunoId);
-    return al ? al.pago !== false : true;
+    return al ? al.pago === true : false;
   }
   function setAlunoPago(alunoId: string, pago: boolean): void {
     const idx = form.alunos.findIndex(a => a.alunoId === alunoId);
@@ -70,8 +82,13 @@ export const useAulasStore = defineStore('aulas', () => {
   }
   function toggleAlunoAula(alunoId: string, valorPadrao: number, checked: boolean): void {
     const idx = form.alunos.findIndex(a => a.alunoId === alunoId);
-    if (idx >= 0) form.alunos[idx].presente = checked;
-    else form.alunos.push({ alunoId, valorPago: valorPadrao, presente: checked, pago: true });
+    if (idx >= 0) {
+      form.alunos[idx].presente = checked;
+      // Ao marcar presença de um aluno que já tinha um registro (ex: reaberto na edição),
+      // o pagamento não fica assumido — o usuário precisa confirmar explicitamente.
+      if (checked) form.alunos[idx].pago = false;
+    }
+    else form.alunos.push({ alunoId, valorPago: valorPadrao, presente: checked, pago: false });
   }
   function setAlunoValor(alunoId: string, val: string): void {
     const idx = form.alunos.findIndex(a => a.alunoId === alunoId);
@@ -81,18 +98,25 @@ export const useAulasStore = defineStore('aulas', () => {
     return form.alunos.filter(a => a.presente).reduce((s, a) => s + (a.valorPago || 0), 0);
   }
 
-  function salvarAula(): { ok: boolean; msg?: string } {
+  async function salvarAula(): Promise<{ ok: boolean; msg?: string }> {
     if (!form.data) return { ok: false, msg: 'Informe a data da aula.' };
     if (!form.nucleoId) return { ok: false, msg: 'Selecione o núcleo.' };
+    const payload = aulaToRow(JSON.parse(JSON.stringify(form)));
     if (form.id) {
+      const { error } = await supabase.from('aulas').update(payload).eq('id', form.id);
+      if (error) return { ok: false, msg: 'Erro ao salvar: ' + error.message };
       const i = aulas.findIndex(a => a.id === form.id);
       if (i >= 0) Object.assign(aulas[i], JSON.parse(JSON.stringify(form)));
     } else {
-      aulas.push(JSON.parse(JSON.stringify({ ...form, id: genId() })));
+      const { data, error } = await supabase.from('aulas').insert(payload).select().single();
+      if (error) return { ok: false, msg: 'Erro ao salvar: ' + error.message };
+      aulas.push(aulaFromRow(data as AulaRow));
     }
     return { ok: true };
   }
-  function delAula(id: string): void {
+  async function delAula(id: string): Promise<void> {
+    const { error } = await supabase.from('aulas').delete().eq('id', id);
+    if (error) throw error;
     aulas.splice(aulas.findIndex(a => a.id === id), 1);
   }
 
@@ -142,37 +166,38 @@ export const useAulasStore = defineStore('aulas', () => {
   function getPendenciasAluno(alunoId: string) {
     return todasPendencias.value.find(p => p.alunoId === alunoId)?.aulas ?? [];
   }
-  function marcarPago(aulaId: string, alunoId: string): boolean {
+  async function marcarPago(aulaId: string, alunoId: string): Promise<boolean> {
     const aula = aulas.find(a => a.id === aulaId);
     if (!aula) return false;
     const aa = aula.alunos.find(a => a.alunoId === alunoId);
-    if (aa) { aa.pago = true; return true; }
-    return false;
+    if (!aa) return false;
+    aa.pago = true;
+    const { error } = await supabase.from('aulas').update(aulaToRow(JSON.parse(JSON.stringify(aula)))).eq('id', aulaId);
+    if (error) { aa.pago = false; return false; }
+    return true;
   }
-  function marcarTodosPagos(pa: PendenciaAluno): void {
-    for (const item of pa.aulas) marcarPago(item.aulaId, pa.alunoId);
+  async function marcarTodosPagos(pa: PendenciaAluno): Promise<void> {
+    for (const item of pa.aulas) await marcarPago(item.aulaId, pa.alunoId);
   }
 
-  // ── Import/Export ──
   function exportSnapshot(): Aula[] {
     return [...aulas];
   }
-  function importar(dados: Aula[]): void {
-    aulas.splice(0, aulas.length, ...dados);
-  }
-  function limparTudo(): void {
+
+  async function limparTudo(): Promise<void> {
+    const { error } = await supabase.from('aulas').delete().not('id', 'is', null);
+    if (error) throw error;
     aulas.splice(0);
   }
 
   return {
-    aulas, form, profDetalheAberto, chavePix, aulasSorted, aulaFinanceiro, openFinanceiro,
+    aulas, form, profDetalheAberto, chavePix, aulasSorted, aulaFinanceiro, openFinanceiro, loading,
+    fetchAll, limparEstadoLocal,
     openNovaAula, editarAula, salvarAula, delAula,
     aulaHasProf, toggleProfAula, aulaAlunoPresente, getAlunoValor, getAlunoPago, setAlunoPago,
     toggleAlunoAula, setAlunoValor, calcTotalForm, toggleProfDetalhe,
     todasPendencias, todasPendenciasPagas, totalPendenciasGeral, totalPendenciasGeralValor,
     aulaTempendencia, contarPendenciasAula, getPendenciasAluno, marcarPago, marcarTodosPagos,
-    exportSnapshot, importar, limparTudo,
+    exportSnapshot, limparTudo,
   };
 });
-
-export { calcTotal };

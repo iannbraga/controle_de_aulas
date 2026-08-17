@@ -5,11 +5,15 @@ import { useCatalogStore } from '../../stores/catalog';
 const ui = useUiStore();
 const catalog = useCatalogStore();
 
-function salvar(): void {
+async function salvar(): Promise<void> {
   if (!ui.formNucleo.nome.trim()) { ui.showToast('Informe o nome do núcleo.'); return; }
-  catalog.salvarNucleo({ ...ui.formNucleo });
-  ui.modals.nucleo = false;
-  ui.showToast('Núcleo salvo!');
+  try {
+    await catalog.salvarNucleo({ ...ui.formNucleo });
+    ui.modals.nucleo = false;
+    ui.showToast('Núcleo salvo!');
+  } catch {
+    ui.showToast('Erro ao salvar núcleo.');
+  }
 }
 </script>
 

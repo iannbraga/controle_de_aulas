@@ -5,11 +5,15 @@ import { useCatalogStore } from '../../stores/catalog';
 const ui = useUiStore();
 const catalog = useCatalogStore();
 
-function salvar(): void {
+async function salvar(): Promise<void> {
   if (!ui.formResp.nome.trim()) { ui.showToast('Informe o nome do responsável.'); return; }
-  catalog.salvarResp({ ...ui.formResp });
-  ui.modals.resp = false;
-  ui.showToast('Responsável salvo!');
+  try {
+    await catalog.salvarResp({ ...ui.formResp });
+    ui.modals.resp = false;
+    ui.showToast('Responsável salvo!');
+  } catch {
+    ui.showToast('Erro ao salvar responsável.');
+  }
 }
 </script>
 

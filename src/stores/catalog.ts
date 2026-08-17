@@ -1,22 +1,21 @@
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { defineStore } from 'pinia';
 import type { Professor, Aluno, Nucleo, Responsavel } from '../types/domain';
-import { genId } from '../lib/helpers';
-import { loadData } from '../lib/persistence';
-
-const saved = loadData();
+import type { ProfessorRow, AlunoRow, NucleoRow, ResponsavelRow } from '../types/db';
+import { supabase } from '../lib/supabase';
+import { nucleoFromRow, nucleoToRow, professorFromRow, professorToRow, responsavelFromRow, responsavelToRow, alunoFromRow, alunoToRow } from '../lib/mappers';
 
 /**
  * Store dos cadastros: professores, alunos, núcleos e responsáveis.
- * Mantido em um único store (em vez de 4) porque as ações de CRUD são
- * pequenas e os dados são fortemente relacionados entre si (aluno →
- * responsável, aula → professor/núcleo).
+ * Cada método de escrita fala direto com o Supabase (fonte da verdade) e
+ * só depois atualiza o array reativo local, que é o que a UI usa.
  */
 export const useCatalogStore = defineStore('catalog', () => {
-  const professores = reactive<Professor[]>(saved.professores ?? []);
-  const alunos = reactive<Aluno[]>(saved.alunos ?? []);
-  const nucleos = reactive<Nucleo[]>(saved.nucleos ?? []);
-  const responsaveis = reactive<Responsavel[]>(saved.responsaveis ?? []);
+  const professores = reactive<Professor[]>([]);
+  const alunos = reactive<Aluno[]>([]);
+  const nucleos = reactive<Nucleo[]>([]);
+  const responsaveis = reactive<Responsavel[]>([]);
+  const loading = ref(false);
 
   const professoresAtivos = computed(() => professores.filter(p => p.ativo));
   const alunosAtivos = computed(() => alunos.filter(a => a.ativo));
@@ -33,83 +32,130 @@ export const useCatalogStore = defineStore('catalog', () => {
     return getRespNome(al.responsavelId);
   };
 
-  // ── Professor ──
-  function salvarProf(dados: Professor): void {
-    if (dados.id) {
-      const i = professores.findIndex(p => p.id === dados.id);
-      if (i >= 0) Object.assign(professores[i], dados);
-    } else {
-      professores.push({ ...dados, id: genId() });
-    }
-  }
-  function delProf(id: string): void {
-    professores.splice(professores.findIndex(p => p.id === id), 1);
-  }
-
-  // ── Aluno ──
-  function salvarAluno(dados: Aluno): void {
-    if (dados.id) {
-      const i = alunos.findIndex(a => a.id === dados.id);
-      if (i >= 0) Object.assign(alunos[i], dados);
-    } else {
-      alunos.push({ ...dados, id: genId() });
-    }
-  }
-  function delAluno(id: string): void {
-    alunos.splice(alunos.findIndex(a => a.id === id), 1);
+  async function fetchAll(): Promise<void> {
+    loading.value = true;
+    const [profRes, alunoRes, nucleoRes, respRes] = await Promise.all([
+      supabase.from('professores').select('*').order('nome'),
+      supabase.from('alunos').select('*').order('nome'),
+      supabase.from('nucleos').select('*').order('nome'),
+      supabase.from('responsaveis').select('*').order('nome'),
+    ]);
+    if (!profRes.error) professores.splice(0, professores.length, ...(profRes.data as ProfessorRow[]).map(professorFromRow));
+    if (!alunoRes.error) alunos.splice(0, alunos.length, ...(alunoRes.data as AlunoRow[]).map(alunoFromRow));
+    if (!nucleoRes.error) nucleos.splice(0, nucleos.length, ...(nucleoRes.data as NucleoRow[]).map(nucleoFromRow));
+    if (!respRes.error) responsaveis.splice(0, responsaveis.length, ...(respRes.data as ResponsavelRow[]).map(responsavelFromRow));
+    loading.value = false;
   }
 
-  // ── Núcleo ──
-  function salvarNucleo(dados: Nucleo): void {
-    if (dados.id) {
-      const i = nucleos.findIndex(n => n.id === dados.id);
-      if (i >= 0) Object.assign(nucleos[i], dados);
-    } else {
-      nucleos.push({ ...dados, id: genId() });
-    }
-  }
-  function delNucleo(id: string): void {
-    nucleos.splice(nucleos.findIndex(n => n.id === id), 1);
-  }
-
-  // ── Responsável ──
-  function salvarResp(dados: Responsavel): void {
-    if (dados.id) {
-      const i = responsaveis.findIndex(r => r.id === dados.id);
-      if (i >= 0) Object.assign(responsaveis[i], dados);
-    } else {
-      responsaveis.push({ ...dados, id: genId() });
-    }
-  }
-  function delResp(id: string): void {
-    // Remove vínculo dos alunos antes de excluir o responsável
-    alunos.forEach(a => { if (a.responsavelId === id) a.responsavelId = ''; });
-    responsaveis.splice(responsaveis.findIndex(r => r.id === id), 1);
-  }
-
-  function limparTudo(): void {
+  function limparEstadoLocal(): void {
     professores.splice(0);
     alunos.splice(0);
     nucleos.splice(0);
     responsaveis.splice(0);
   }
 
-  function importar(dados: { professores: Professor[]; alunos: Aluno[]; nucleos: Nucleo[]; responsaveis?: Responsavel[] }): void {
-    professores.splice(0, professores.length, ...dados.professores);
-    alunos.splice(0, alunos.length, ...dados.alunos);
-    nucleos.splice(0, nucleos.length, ...dados.nucleos);
-    responsaveis.splice(0, responsaveis.length, ...(dados.responsaveis || []));
+  // ── Professor ──
+  async function salvarProf(dados: Professor): Promise<void> {
+    if (dados.id) {
+      const { error } = await supabase.from('professores').update(professorToRow(dados)).eq('id', dados.id);
+      if (error) throw error;
+      const i = professores.findIndex(p => p.id === dados.id);
+      if (i >= 0) Object.assign(professores[i], dados);
+    } else {
+      const { data, error } = await supabase.from('professores').insert(professorToRow(dados)).select().single();
+      if (error) throw error;
+      professores.push(professorFromRow(data as ProfessorRow));
+    }
+  }
+  async function delProf(id: string): Promise<void> {
+    const { error } = await supabase.from('professores').delete().eq('id', id);
+    if (error) throw error;
+    professores.splice(professores.findIndex(p => p.id === id), 1);
+  }
+
+  // ── Aluno ──
+  async function salvarAluno(dados: Aluno): Promise<void> {
+    if (dados.id) {
+      const { error } = await supabase.from('alunos').update(alunoToRow(dados)).eq('id', dados.id);
+      if (error) throw error;
+      const i = alunos.findIndex(a => a.id === dados.id);
+      if (i >= 0) Object.assign(alunos[i], dados);
+    } else {
+      const { data, error } = await supabase.from('alunos').insert(alunoToRow(dados)).select().single();
+      if (error) throw error;
+      alunos.push(alunoFromRow(data as AlunoRow));
+    }
+  }
+  async function delAluno(id: string): Promise<void> {
+    const { error } = await supabase.from('alunos').delete().eq('id', id);
+    if (error) throw error;
+    alunos.splice(alunos.findIndex(a => a.id === id), 1);
+  }
+
+  // ── Núcleo ──
+  async function salvarNucleo(dados: Nucleo): Promise<void> {
+    if (dados.id) {
+      const { error } = await supabase.from('nucleos').update(nucleoToRow(dados)).eq('id', dados.id);
+      if (error) throw error;
+      const i = nucleos.findIndex(n => n.id === dados.id);
+      if (i >= 0) Object.assign(nucleos[i], dados);
+    } else {
+      const { data, error } = await supabase.from('nucleos').insert(nucleoToRow(dados)).select().single();
+      if (error) throw error;
+      nucleos.push(nucleoFromRow(data as NucleoRow));
+    }
+  }
+  async function delNucleo(id: string): Promise<void> {
+    const { error } = await supabase.from('nucleos').delete().eq('id', id);
+    if (error) throw error;
+    nucleos.splice(nucleos.findIndex(n => n.id === id), 1);
+  }
+
+  // ── Responsável ──
+  async function salvarResp(dados: Responsavel): Promise<void> {
+    if (dados.id) {
+      const { error } = await supabase.from('responsaveis').update(responsavelToRow(dados)).eq('id', dados.id);
+      if (error) throw error;
+      const i = responsaveis.findIndex(r => r.id === dados.id);
+      if (i >= 0) Object.assign(responsaveis[i], dados);
+    } else {
+      const { data, error } = await supabase.from('responsaveis').insert(responsavelToRow(dados)).select().single();
+      if (error) throw error;
+      responsaveis.push(responsavelFromRow(data as ResponsavelRow));
+    }
+  }
+  async function delResp(id: string): Promise<void> {
+    // Remove vínculo dos alunos antes de excluir o responsável
+    const vinculados = alunos.filter(a => a.responsavelId === id);
+    for (const al of vinculados) {
+      await supabase.from('alunos').update({ responsavel_id: null }).eq('id', al.id);
+      al.responsavelId = '';
+    }
+    const { error } = await supabase.from('responsaveis').delete().eq('id', id);
+    if (error) throw error;
+    responsaveis.splice(responsaveis.findIndex(r => r.id === id), 1);
+  }
+
+  async function limparTudo(): Promise<void> {
+    await Promise.all([
+      supabase.from('professores').delete().not('id', 'is', null),
+      supabase.from('alunos').delete().not('id', 'is', null),
+      supabase.from('nucleos').delete().not('id', 'is', null),
+      supabase.from('responsaveis').delete().not('id', 'is', null),
+    ]);
+    limparEstadoLocal();
   }
 
   return {
-    professores, alunos, nucleos, responsaveis,
+    professores, alunos, nucleos, responsaveis, loading,
     professoresAtivos, alunosAtivos, responsaveisAtivos,
     getNucleoNome, getProfNome, getAlunoNome, getRespNome,
     getAlunosDoResponsavel, getAlunoResponsavel,
+    fetchAll, limparEstadoLocal,
     salvarProf, delProf,
     salvarAluno, delAluno,
     salvarNucleo, delNucleo,
     salvarResp, delResp,
-    limparTudo, importar,
+    limparTudo,
   };
 });

@@ -5,9 +5,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './style.css';
 import App from './App.vue';
-import { persistencePlugin } from './stores/persistPlugin';
 
 const pinia = createPinia();
-pinia.use(persistencePlugin);
 
 createApp(App).use(pinia).mount('#app');

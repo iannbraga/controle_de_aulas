@@ -5,11 +5,15 @@ import { useCatalogStore } from '../../stores/catalog';
 const ui = useUiStore();
 const catalog = useCatalogStore();
 
-function salvar(): void {
+async function salvar(): Promise<void> {
   if (!ui.formAluno.nome.trim()) { ui.showToast('Informe o nome do aluno.'); return; }
-  catalog.salvarAluno({ ...ui.formAluno });
-  ui.modals.aluno = false;
-  ui.showToast('Aluno salvo!');
+  try {
+    await catalog.salvarAluno({ ...ui.formAluno });
+    ui.modals.aluno = false;
+    ui.showToast('Aluno salvo!');
+  } catch {
+    ui.showToast('Erro ao salvar aluno.');
+  }
 }
 </script>
 

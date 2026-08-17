@@ -9,11 +9,15 @@ const catalog = useCatalogStore();
 function applyPesoSugerido(): void {
   ui.formProf.peso = PESO_SUGERIDO[ui.formProf.nivel] ?? 1;
 }
-function salvar(): void {
+async function salvar(): Promise<void> {
   if (!ui.formProf.nome.trim()) { ui.showToast('Informe o nome do professor.'); return; }
-  catalog.salvarProf({ ...ui.formProf });
-  ui.modals.prof = false;
-  ui.showToast('Professor salvo!');
+  try {
+    await catalog.salvarProf({ ...ui.formProf });
+    ui.modals.prof = false;
+    ui.showToast('Professor salvo!');
+  } catch {
+    ui.showToast('Erro ao salvar professor.');
+  }
 }
 </script>
 

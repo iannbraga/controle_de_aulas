@@ -6,7 +6,7 @@ const ui = useUiStore();
 const catalog = useCatalogStore();
 
 function delNucleo(id: string): void {
-  ui.askConfirm(() => { catalog.delNucleo(id); ui.showToast('Núcleo removido.'); });
+  ui.askConfirm(async () => { await catalog.delNucleo(id); ui.showToast('Núcleo removido.'); });
 }
 </script>
 

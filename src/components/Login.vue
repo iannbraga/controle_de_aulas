@@ -1,0 +1,76 @@
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useAuthStore } from '../stores/auth';
+
+const auth = useAuthStore();
+const modo = ref<'entrar' | 'criar'>('entrar');
+const email = ref('');
+const password = ref('');
+const infoMsg = ref<string | null>(null);
+
+async function submit(): Promise<void> {
+  infoMsg.value = null;
+  if (!email.value.trim() || !password.value) return;
+
+  if (modo.value === 'entrar') {
+    await auth.signIn(email.value.trim(), password.value);
+  } else {
+    const res = await auth.signUp(email.value.trim(), password.value);
+    if (res.ok && res.needsConfirmation) {
+      infoMsg.value = 'Conta criada! Verifique seu e-mail para confirmar o cadastro antes de entrar.';
+    } else if (res.ok) {
+      infoMsg.value = null;
+    }
+  }
+}
+
+function alternarModo(): void {
+  modo.value = modo.value === 'entrar' ? 'criar' : 'entrar';
+  auth.errorMsg = null;
+  infoMsg.value = null;
+}
+</script>
+
+<template>
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="topbar-icon" style="font-size:2.2rem;text-align:center;margin-bottom:6px">♟</div>
+      <div class="topbar-title" style="text-align:center;color:var(--text-primary);font-size:1.3rem;margin-bottom:2px">Clube de Xadrez</div>
+      <div style="text-align:center;color:var(--text-muted);font-size:.8rem;margin-bottom:22px">Gestão de Aulas</div>
+
+      <form @submit.prevent="submit">
+        <div class="mb-3">
+          <label class="form-label">E-mail</label>
+          <input class="form-control" type="email" v-model="email" placeholder="voce@exemplo.com" autocomplete="username" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Senha</label>
+          <input class="form-control" type="password" v-model="password" placeholder="••••••••" autocomplete="current-password" minlength="6" required />
+        </div>
+
+        <div v-if="auth.errorMsg" style="color:var(--chess-red);font-size:.8rem;margin-bottom:12px">
+          <i class="bi bi-exclamation-circle-fill"></i> {{ auth.errorMsg }}
+        </div>
+        <div v-if="infoMsg" style="color:var(--chess-green);font-size:.8rem;margin-bottom:12px">
+          <i class="bi bi-check-circle-fill"></i> {{ infoMsg }}
+        </div>
+
+        <button type="submit" class="btn-gold w-100 justify-content-center" :disabled="auth.loading">
+          <span v-if="auth.loading" class="spinner-border spinner-border-sm"></span>
+          <span v-else>{{ modo === 'entrar' ? 'Entrar' : 'Criar conta' }}</span>
+        </button>
+      </form>
+
+      <div style="text-align:center;margin-top:16px;font-size:.82rem;color:var(--text-muted)">
+        <template v-if="modo === 'entrar'">
+          Ainda não tem conta?
+          <a href="#" @click.prevent="alternarModo">Criar conta</a>
+        </template>
+        <template v-else>
+          Já tem conta?
+          <a href="#" @click.prevent="alternarModo">Entrar</a>
+        </template>
+      </div>
+    </div>
+  </div>
+</template>
