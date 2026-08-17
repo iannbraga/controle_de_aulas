@@ -74,12 +74,6 @@ function importarJSON(event: Event): void {
   reader.readAsText(file);
 }
 
-async function limparTudo(): Promise<void> {
-  await catalog.limparTudo();
-  await aulasStore.limparTudo();
-  ui.showToast('Todos os dados foram removidos.');
-}
-
 function abrirCompartilharMes(): void {
   ui.modals.dados = false;
   ui.modals.compartilhar = true;
@@ -137,13 +131,6 @@ async function sair(): Promise<void> {
         <div>
           <div class="do-title">Compartilhar fechamento</div>
           <div class="do-sub">Gera texto do mês atual para WhatsApp / e-mail</div>
-        </div>
-      </button>
-      <button class="dados-option" @click="ui.askConfirm(limparTudo); ui.modals.dados = false" style="border-color:#fdecea">
-        <div class="do-icon red"><i class="bi bi-trash3"></i></div>
-        <div>
-          <div class="do-title" style="color:var(--chess-red)">Limpar todos os dados</div>
-          <div class="do-sub">Remove tudo permanentemente da nuvem</div>
         </div>
       </button>
       <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">

@@ -113,7 +113,11 @@ create trigger trg_app_settings_updated_at
   for each row execute function public.set_updated_at();
 
 -- ═══════════════════════════════════════════════════════════════
--- ROW LEVEL SECURITY — cada usuário só vê/edita os próprios dados
+-- ROW LEVEL SECURITY — app de equipe: qualquer usuário autenticado
+-- vê e edita os dados de todo mundo (dados compartilhados do time,
+-- não isolados por dono). user_id continua gravado em cada registro
+-- só como registro de quem criou (auditoria), não é mais usado para
+-- restringir acesso.
 -- ═══════════════════════════════════════════════════════════════
 
 alter table public.nucleos enable row level security;
@@ -124,24 +128,29 @@ alter table public.aulas enable row level security;
 alter table public.app_settings enable row level security;
 
 drop policy if exists "nucleos_owner" on public.nucleos;
-create policy "nucleos_owner" on public.nucleos
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "nucleos_team" on public.nucleos;
+create policy "nucleos_team" on public.nucleos
+  for all using (auth.uid() is not null) with check (auth.uid() is not null);
 
 drop policy if exists "professores_owner" on public.professores;
-create policy "professores_owner" on public.professores
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "professores_team" on public.professores;
+create policy "professores_team" on public.professores
+  for all using (auth.uid() is not null) with check (auth.uid() is not null);
 
 drop policy if exists "responsaveis_owner" on public.responsaveis;
-create policy "responsaveis_owner" on public.responsaveis
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "responsaveis_team" on public.responsaveis;
+create policy "responsaveis_team" on public.responsaveis
+  for all using (auth.uid() is not null) with check (auth.uid() is not null);
 
 drop policy if exists "alunos_owner" on public.alunos;
-create policy "alunos_owner" on public.alunos
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "alunos_team" on public.alunos;
+create policy "alunos_team" on public.alunos
+  for all using (auth.uid() is not null) with check (auth.uid() is not null);
 
 drop policy if exists "aulas_owner" on public.aulas;
-create policy "aulas_owner" on public.aulas
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "aulas_team" on public.aulas;
+create policy "aulas_team" on public.aulas
+  for all using (auth.uid() is not null) with check (auth.uid() is not null);
 
 -- app_settings: qualquer um (mesmo deslogado) pode LER — a tela de login
 -- precisa saber se deve oferecer "Criar conta" antes de autenticar.
