@@ -4,6 +4,7 @@ import { useUiStore } from '../../stores/ui';
 import { useCatalogStore } from '../../stores/catalog';
 import { useAulasStore } from '../../stores/aulas';
 import { useAuthStore } from '../../stores/auth';
+import { useSettingsStore } from '../../stores/settings';
 import { importBackupToSupabase } from '../../lib/migration';
 import type { Backup } from '../../types/domain';
 
@@ -11,8 +12,22 @@ const ui = useUiStore();
 const catalog = useCatalogStore();
 const aulasStore = useAulasStore();
 const auth = useAuthStore();
+const settings = useSettingsStore();
 const importInput = ref<HTMLInputElement | null>(null);
 const importando = ref(false);
+
+async function togglePermitirCadastro(event: Event): Promise<void> {
+  const checked = (event.target as HTMLInputElement).checked;
+  const ok = await settings.setPermitirCadastro(checked);
+  ui.showToast(ok ? (checked ? 'Criação de conta ativada.' : 'Criação de conta desativada.') : 'Erro ao salvar configuração.');
+}
+
+async function alterarCacheTtl(event: Event): Promise<void> {
+  const valor = parseInt((event.target as HTMLInputElement).value, 10);
+  if (isNaN(valor) || valor < 0) return;
+  const ok = await settings.setCacheTtlMinutos(valor);
+  ui.showToast(ok ? 'Tempo de cache atualizado.' : 'Erro ao salvar configuração.');
+}
 
 function closeDadosModal(): void {
   ui.modals.dados = false;
@@ -131,6 +146,24 @@ async function sair(): Promise<void> {
           <div class="do-sub">Remove tudo permanentemente da nuvem</div>
         </div>
       </button>
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-size:.85rem;font-weight:600;color:var(--text-primary)"><i class="bi bi-person-plus-fill"></i> Permitir criação de conta</div>
+          <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px">Quando desligado, a tela de login não oferece mais "Criar conta"</div>
+        </div>
+        <div class="form-check form-switch mb-0" style="flex-shrink:0">
+          <input class="form-check-input" type="checkbox" role="switch" style="width:2.5em;height:1.4em"
+            :checked="settings.permitirCadastro" :disabled="settings.saving" @change="togglePermitirCadastro" />
+        </div>
+      </div>
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-size:.85rem;font-weight:600;color:var(--text-primary)"><i class="bi bi-clock-history"></i> Validade do cache</div>
+          <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px">Minutos que os dados ficam salvos neste aparelho antes de consultar o Supabase de novo. Use 0 para desativar o cache.</div>
+        </div>
+        <input type="number" min="0" step="1" class="form-control" style="width:70px;flex-shrink:0;text-align:center"
+          :value="settings.cacheTtlMinutos" :disabled="settings.saving" @change="alterarCacheTtl" />
+      </div>
       <button class="dados-option" @click="sair">
         <div class="do-icon"><i class="bi bi-box-arrow-right"></i></div>
         <div>

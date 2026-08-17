@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
+import { useSettingsStore } from '../stores/settings';
 
 const auth = useAuthStore();
+const settings = useSettingsStore();
 const modo = ref<'entrar' | 'criar'>('entrar');
 const email = ref('');
 const password = ref('');
 const infoMsg = ref<string | null>(null);
+
+onMounted(() => {
+  if (!settings.loaded) settings.fetch();
+});
 
 async function submit(): Promise<void> {
   infoMsg.value = null;
@@ -15,6 +21,7 @@ async function submit(): Promise<void> {
   if (modo.value === 'entrar') {
     await auth.signIn(email.value.trim(), password.value);
   } else {
+    if (!settings.permitirCadastro) { auth.errorMsg = 'Criação de conta está desativada no momento.'; return; }
     const res = await auth.signUp(email.value.trim(), password.value);
     if (res.ok && res.needsConfirmation) {
       infoMsg.value = 'Conta criada! Verifique seu e-mail para confirmar o cadastro antes de entrar.';
@@ -25,6 +32,7 @@ async function submit(): Promise<void> {
 }
 
 function alternarModo(): void {
+  if (modo.value === 'entrar' && !settings.permitirCadastro) return;
   modo.value = modo.value === 'entrar' ? 'criar' : 'entrar';
   auth.errorMsg = null;
   infoMsg.value = null;
@@ -61,7 +69,7 @@ function alternarModo(): void {
         </button>
       </form>
 
-      <div style="text-align:center;margin-top:16px;font-size:.82rem;color:var(--text-muted)">
+      <div v-if="modo === 'criar' || settings.permitirCadastro" style="text-align:center;margin-top:16px;font-size:.82rem;color:var(--text-muted)">
         <template v-if="modo === 'entrar'">
           Ainda não tem conta?
           <a href="#" @click.prevent="alternarModo">Criar conta</a>

@@ -53,3 +53,10 @@ export interface AulaRow {
   created_at: string;
   updated_at: string;
 }
+
+export interface AppSettingsRow {
+  id: true;
+  permitir_cadastro: boolean;
+  cache_ttl_minutos: number;
+  updated_at: string;
+}

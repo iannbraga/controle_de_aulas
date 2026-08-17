@@ -67,6 +67,25 @@ create table if not exists public.aulas (
   updated_at timestamptz not null default now()
 );
 
+-- ── CONFIGURAÇÕES DO APP ──
+-- Linha única (id fixo) com opções globais, lida ANTES do login (a tela de
+-- login precisa saber se deve oferecer "Criar conta"), por isso não tem
+-- user_id nem fica atrás de RLS de dono.
+create table if not exists public.app_settings (
+  id boolean primary key default true, -- sempre 'true', garante 1 única linha
+  permitir_cadastro boolean not null default true,
+  cache_ttl_minutos integer not null default 30,
+  updated_at timestamptz not null default now(),
+  constraint app_settings_singleton check (id = true)
+);
+
+-- coluna nova pra quem já tinha rodado o schema antes de existir cache
+alter table public.app_settings add column if not exists cache_ttl_minutos integer not null default 30;
+
+insert into public.app_settings (id, permitir_cadastro, cache_ttl_minutos)
+values (true, true, 30)
+on conflict (id) do nothing;
+
 -- Índices úteis
 create index if not exists idx_aulas_user_data on public.aulas (user_id, data desc);
 create index if not exists idx_alunos_user on public.alunos (user_id);
@@ -88,6 +107,11 @@ create trigger trg_aulas_updated_at
   before update on public.aulas
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_app_settings_updated_at on public.app_settings;
+create trigger trg_app_settings_updated_at
+  before update on public.app_settings
+  for each row execute function public.set_updated_at();
+
 -- ═══════════════════════════════════════════════════════════════
 -- ROW LEVEL SECURITY — cada usuário só vê/edita os próprios dados
 -- ═══════════════════════════════════════════════════════════════
@@ -97,6 +121,7 @@ alter table public.professores enable row level security;
 alter table public.responsaveis enable row level security;
 alter table public.alunos enable row level security;
 alter table public.aulas enable row level security;
+alter table public.app_settings enable row level security;
 
 drop policy if exists "nucleos_owner" on public.nucleos;
 create policy "nucleos_owner" on public.nucleos
@@ -117,3 +142,14 @@ create policy "alunos_owner" on public.alunos
 drop policy if exists "aulas_owner" on public.aulas;
 create policy "aulas_owner" on public.aulas
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- app_settings: qualquer um (mesmo deslogado) pode LER — a tela de login
+-- precisa saber se deve oferecer "Criar conta" antes de autenticar.
+-- Só usuários autenticados podem alterar.
+drop policy if exists "app_settings_select_all" on public.app_settings;
+create policy "app_settings_select_all" on public.app_settings
+  for select using (true);
+
+drop policy if exists "app_settings_update_authenticated" on public.app_settings;
+create policy "app_settings_update_authenticated" on public.app_settings
+  for update using (auth.uid() is not null) with check (auth.uid() is not null);

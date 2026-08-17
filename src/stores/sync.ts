@@ -5,6 +5,7 @@ import { loadData } from '../lib/persistence';
 import { importBackupToSupabase } from '../lib/migration';
 import { useCatalogStore } from './catalog';
 import { useAulasStore } from './aulas';
+import { useSettingsStore } from './settings';
 
 const LOCAL_MIGRATION_FLAG = 'xadrez-migrado-supabase';
 
@@ -35,6 +36,10 @@ export const useSyncStore = defineStore('sync', () => {
     status.value = 'checking';
     errorMsg.value = null;
     try {
+      const catalog = useCatalogStore();
+      const aulasStore = useAulasStore();
+      let acabouDeMigrar = false;
+
       const jaMigrado = localStorage.getItem(LOCAL_MIGRATION_FLAG) === '1';
       if (!jaMigrado && !(await usuarioTemDadosNoSupabase())) {
         const local = loadData();
@@ -43,15 +48,21 @@ export const useSyncStore = defineStore('sync', () => {
           status.value = 'migrating';
           const resumo = await importBackupToSupabase(local);
           migrationSummary.value = `Migrado: ${resumo.aulas} aulas, ${resumo.professores} professores, ${resumo.alunos} alunos, ${resumo.nucleos} núcleos, ${resumo.responsaveis} responsáveis.`;
+          acabouDeMigrar = true;
+          // Dados acabaram de ser escritos direto no Supabase — descarta
+          // qualquer cache antigo (de antes da migração) pra não reaparecer.
+          catalog.clearCatalogCache();
+          aulasStore.clearAulasCache();
         }
         localStorage.setItem(LOCAL_MIGRATION_FLAG, '1');
       }
 
       status.value = 'loading';
-      const catalog = useCatalogStore();
-      const aulasStore = useAulasStore();
-      await catalog.fetchAll();
-      await aulasStore.fetchAll();
+      const settings = useSettingsStore();
+      if (!settings.loaded) await settings.fetch();
+      const cacheTtlMs = acabouDeMigrar ? 0 : settings.cacheTtlMinutos * 60_000;
+      await catalog.fetchAll(cacheTtlMs);
+      await aulasStore.fetchAll(cacheTtlMs);
       status.value = 'ready';
     } catch (e: any) {
       status.value = 'error';
@@ -63,8 +74,12 @@ export const useSyncStore = defineStore('sync', () => {
     status.value = 'idle';
     errorMsg.value = null;
     migrationSummary.value = null;
-    useCatalogStore().limparEstadoLocal();
-    useAulasStore().limparEstadoLocal();
+    const catalog = useCatalogStore();
+    const aulasStore = useAulasStore();
+    catalog.limparEstadoLocal();
+    aulasStore.limparEstadoLocal();
+    catalog.clearCatalogCache();
+    aulasStore.clearAulasCache();
   }
 
   return { status, errorMsg, migrationSummary, bootstrap, reset };

@@ -4,11 +4,24 @@ import type { Professor, Aluno, Nucleo, Responsavel } from '../types/domain';
 import type { ProfessorRow, AlunoRow, NucleoRow, ResponsavelRow } from '../types/db';
 import { supabase } from '../lib/supabase';
 import { nucleoFromRow, nucleoToRow, professorFromRow, professorToRow, responsavelFromRow, responsavelToRow, alunoFromRow, alunoToRow } from '../lib/mappers';
+import { readCache, writeCache, clearCache } from '../lib/cache';
+
+const CACHE_KEY = 'xadrez-cache-catalog';
+
+interface CatalogCache {
+  professores: Professor[];
+  alunos: Aluno[];
+  nucleos: Nucleo[];
+  responsaveis: Responsavel[];
+}
 
 /**
  * Store dos cadastros: professores, alunos, núcleos e responsáveis.
  * Cada método de escrita fala direto com o Supabase (fonte da verdade) e
  * só depois atualiza o array reativo local, que é o que a UI usa.
+ * Toda leitura passa por um cache local (ver lib/cache.ts): enquanto o
+ * cache estiver dentro da validade configurada, o Supabase não é
+ * consultado; toda escrita bem-sucedida atualiza o cache na hora.
  */
 export const useCatalogStore = defineStore('catalog', () => {
   const professores = reactive<Professor[]>([]);
@@ -32,7 +45,28 @@ export const useCatalogStore = defineStore('catalog', () => {
     return getRespNome(al.responsavelId);
   };
 
-  async function fetchAll(): Promise<void> {
+  function snapshotCache(): CatalogCache {
+    return {
+      professores: [...professores],
+      alunos: [...alunos],
+      nucleos: [...nucleos],
+      responsaveis: [...responsaveis],
+    };
+  }
+  function saveCache(): void { writeCache(CACHE_KEY, snapshotCache()); }
+  function clearCatalogCache(): void { clearCache(CACHE_KEY); }
+
+  async function fetchAll(cacheTtlMs = 0): Promise<void> {
+    if (cacheTtlMs > 0) {
+      const cached = readCache<CatalogCache>(CACHE_KEY, cacheTtlMs);
+      if (cached) {
+        professores.splice(0, professores.length, ...cached.professores);
+        alunos.splice(0, alunos.length, ...cached.alunos);
+        nucleos.splice(0, nucleos.length, ...cached.nucleos);
+        responsaveis.splice(0, responsaveis.length, ...cached.responsaveis);
+        return;
+      }
+    }
     loading.value = true;
     const [profRes, alunoRes, nucleoRes, respRes] = await Promise.all([
       supabase.from('professores').select('*').order('nome'),
@@ -45,6 +79,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     if (!nucleoRes.error) nucleos.splice(0, nucleos.length, ...(nucleoRes.data as NucleoRow[]).map(nucleoFromRow));
     if (!respRes.error) responsaveis.splice(0, responsaveis.length, ...(respRes.data as ResponsavelRow[]).map(responsavelFromRow));
     loading.value = false;
+    saveCache();
   }
 
   function limparEstadoLocal(): void {
@@ -66,11 +101,13 @@ export const useCatalogStore = defineStore('catalog', () => {
       if (error) throw error;
       professores.push(professorFromRow(data as ProfessorRow));
     }
+    saveCache();
   }
   async function delProf(id: string): Promise<void> {
     const { error } = await supabase.from('professores').delete().eq('id', id);
     if (error) throw error;
     professores.splice(professores.findIndex(p => p.id === id), 1);
+    saveCache();
   }
 
   // ── Aluno ──
@@ -85,11 +122,13 @@ export const useCatalogStore = defineStore('catalog', () => {
       if (error) throw error;
       alunos.push(alunoFromRow(data as AlunoRow));
     }
+    saveCache();
   }
   async function delAluno(id: string): Promise<void> {
     const { error } = await supabase.from('alunos').delete().eq('id', id);
     if (error) throw error;
     alunos.splice(alunos.findIndex(a => a.id === id), 1);
+    saveCache();
   }
 
   // ── Núcleo ──
@@ -104,11 +143,13 @@ export const useCatalogStore = defineStore('catalog', () => {
       if (error) throw error;
       nucleos.push(nucleoFromRow(data as NucleoRow));
     }
+    saveCache();
   }
   async function delNucleo(id: string): Promise<void> {
     const { error } = await supabase.from('nucleos').delete().eq('id', id);
     if (error) throw error;
     nucleos.splice(nucleos.findIndex(n => n.id === id), 1);
+    saveCache();
   }
 
   // ── Responsável ──
@@ -123,6 +164,7 @@ export const useCatalogStore = defineStore('catalog', () => {
       if (error) throw error;
       responsaveis.push(responsavelFromRow(data as ResponsavelRow));
     }
+    saveCache();
   }
   async function delResp(id: string): Promise<void> {
     // Remove vínculo dos alunos antes de excluir o responsável
@@ -134,6 +176,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     const { error } = await supabase.from('responsaveis').delete().eq('id', id);
     if (error) throw error;
     responsaveis.splice(responsaveis.findIndex(r => r.id === id), 1);
+    saveCache();
   }
 
   async function limparTudo(): Promise<void> {
@@ -144,6 +187,7 @@ export const useCatalogStore = defineStore('catalog', () => {
       supabase.from('responsaveis').delete().not('id', 'is', null),
     ]);
     limparEstadoLocal();
+    saveCache();
   }
 
   return {
@@ -151,7 +195,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     professoresAtivos, alunosAtivos, responsaveisAtivos,
     getNucleoNome, getProfNome, getAlunoNome, getRespNome,
     getAlunosDoResponsavel, getAlunoResponsavel,
-    fetchAll, limparEstadoLocal,
+    fetchAll, limparEstadoLocal, clearCatalogCache,
     salvarProf, delProf,
     salvarAluno, delAluno,
     salvarNucleo, delNucleo,

@@ -5,7 +5,10 @@ import type { AulaRow } from '../types/db';
 import { mesEncerrado } from '../lib/helpers';
 import { supabase } from '../lib/supabase';
 import { aulaFromRow, aulaToRow } from '../lib/mappers';
+import { readCache, writeCache, clearCache } from '../lib/cache';
 import { useCatalogStore } from './catalog';
+
+const CACHE_KEY = 'xadrez-cache-aulas';
 
 const blankAula = (): Aula => ({
   id: '',
@@ -30,11 +33,22 @@ export const useAulasStore = defineStore('aulas', () => {
 
   const aulasSorted = computed(() => [...aulas].sort((a, b) => b.data.localeCompare(a.data)));
 
-  async function fetchAll(): Promise<void> {
+  function saveCache(): void { writeCache(CACHE_KEY, [...aulas]); }
+  function clearAulasCache(): void { clearCache(CACHE_KEY); }
+
+  async function fetchAll(cacheTtlMs = 0): Promise<void> {
+    if (cacheTtlMs > 0) {
+      const cached = readCache<Aula[]>(CACHE_KEY, cacheTtlMs);
+      if (cached) {
+        aulas.splice(0, aulas.length, ...cached);
+        return;
+      }
+    }
     loading.value = true;
     const { data, error } = await supabase.from('aulas').select('*').order('data', { ascending: false });
     if (!error && data) aulas.splice(0, aulas.length, ...(data as AulaRow[]).map(aulaFromRow));
     loading.value = false;
+    saveCache();
   }
 
   function limparEstadoLocal(): void {
@@ -112,12 +126,14 @@ export const useAulasStore = defineStore('aulas', () => {
       if (error) return { ok: false, msg: 'Erro ao salvar: ' + error.message };
       aulas.push(aulaFromRow(data as AulaRow));
     }
+    saveCache();
     return { ok: true };
   }
   async function delAula(id: string): Promise<void> {
     const { error } = await supabase.from('aulas').delete().eq('id', id);
     if (error) throw error;
     aulas.splice(aulas.findIndex(a => a.id === id), 1);
+    saveCache();
   }
 
   function toggleProfDetalhe(profId: string): void {
@@ -174,6 +190,7 @@ export const useAulasStore = defineStore('aulas', () => {
     aa.pago = true;
     const { error } = await supabase.from('aulas').update(aulaToRow(JSON.parse(JSON.stringify(aula)))).eq('id', aulaId);
     if (error) { aa.pago = false; return false; }
+    saveCache();
     return true;
   }
   async function marcarTodosPagos(pa: PendenciaAluno): Promise<void> {
@@ -188,11 +205,12 @@ export const useAulasStore = defineStore('aulas', () => {
     const { error } = await supabase.from('aulas').delete().not('id', 'is', null);
     if (error) throw error;
     aulas.splice(0);
+    saveCache();
   }
 
   return {
     aulas, form, profDetalheAberto, chavePix, aulasSorted, aulaFinanceiro, openFinanceiro, loading,
-    fetchAll, limparEstadoLocal,
+    fetchAll, limparEstadoLocal, clearAulasCache,
     openNovaAula, editarAula, salvarAula, delAula,
     aulaHasProf, toggleProfAula, aulaAlunoPresente, getAlunoValor, getAlunoPago, setAlunoPago,
     toggleAlunoAula, setAlunoValor, calcTotalForm, toggleProfDetalhe,

@@ -4,6 +4,7 @@ import { useAuthStore } from './stores/auth';
 import { useSyncStore } from './stores/sync';
 import { useUiStore } from './stores/ui';
 import { useAulasStore } from './stores/aulas';
+import { useSettingsStore } from './stores/settings';
 
 import Login from './components/Login.vue';
 
@@ -35,8 +36,9 @@ const auth = useAuthStore();
 const sync = useSyncStore();
 const ui = useUiStore();
 const aulasStore = useAulasStore();
+const settings = useSettingsStore();
 
-onMounted(() => { auth.init(); });
+onMounted(() => { auth.init(); settings.fetch(); });
 
 watch(() => auth.user, (user, prevUser) => {
   if (user && user.id !== prevUser?.id) {
