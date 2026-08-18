@@ -176,7 +176,8 @@ body {
   border: 1px solid var(--border);
   border-radius: 12px;
   margin-bottom: 10px;
-  overflow: hidden;
+  /* sem overflow:hidden — cortava o dropdown-menu do cabeçalho (bug
+     reportado). Arredondamos header/body manualmente em vez disso. */
 }
 
 .aula-card-header {
@@ -186,6 +187,11 @@ body {
   padding: 12px 14px;
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+}
+
+.aula-card-body:last-child {
+  border-radius: 0 0 12px 12px;
 }
 
 .aula-date {
@@ -227,17 +233,18 @@ body {
 
 /* Linhas de lista usam a classe real do Bootstrap list-group-item por cima
    de .list-item (que já cuida da cor/gap/borda-inferior) — zera as bordas
-   laterais/superior que o Bootstrap coloca por padrão, pra não duplicar. */
+   laterais/superior que o Bootstrap coloca por padrão, pra não duplicar.
+   IMPORTANTE: sem overflow:hidden no container — isso cortava o
+   dropdown-menu que abre pra fora da linha (bug reportado). Deixamos o
+   próprio Bootstrap arredondar o 1º/último item via :first-child/:last-child. */
 .list-group-item.list-item {
   border-left: 0;
   border-right: 0;
   border-top: 0;
-  border-radius: 0 !important;
 }
 
 .list-group.card {
   border-radius: 12px;
-  overflow: hidden;
 }
 
 .avatar {
@@ -814,7 +821,8 @@ textarea.form-control {
   border: 1px solid var(--border);
   border-radius: 12px;
   margin-bottom: 10px;
-  overflow: hidden;
+  /* sem overflow:hidden — cortava o dropdown-menu do cabeçalho (bug
+     reportado). Arredondamos header/body/footer manualmente em vez disso. */
 }
 
 .pendencia-card-header {
@@ -824,6 +832,12 @@ textarea.form-control {
   padding: 12px 14px;
   background: #fff8f0;
   border-bottom: 1px solid #ffe0b2;
+  border-radius: 12px 12px 0 0;
+}
+
+.pendencia-card-body:last-child,
+.pendencia-card-footer:last-child {
+  border-radius: 0 0 12px 12px;
 }
 
 .avatar-pend {
