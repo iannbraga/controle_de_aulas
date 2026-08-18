@@ -1,8 +1,8 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import 'bootstrap/dist/css/bootstrap.min.css';
+// Bootstrap CSS/JS agora vêm pelo CDN no index.html (evita carregar/dar
+// bootstrap*.js duas vezes, o que duplicaria os handlers de dropdown/modal).
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './style.css';
 import App from './App.vue';
 

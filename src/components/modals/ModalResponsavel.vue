@@ -21,11 +21,14 @@ async function salvar(): Promise<void> {
 </script>
 
 <template>
-  <div class="modal-backdrop-custom" v-if="ui.modals.resp" @click.self="ui.modals.resp = false">
-    <div class="modal-sheet">
+  <div class="modal-backdrop-custom modal" v-if="ui.modals.resp" @click.self="ui.modals.resp = false">
+    <div class="modal-sheet modal-content">
       <div class="modal-handle"></div>
-      <div class="modal-title"><i class="bi bi-person-badge-fill"></i> {{ ui.formResp.id ? 'Editar' : 'Novo' }} Responsável</div>
-      <div style="font-size:0.73rem;color:var(--text-muted);margin-bottom:10px">
+      <div class="modal-header">
+        <div class="modal-title"><i class="bi bi-person-badge-fill"></i> {{ ui.formResp.id ? 'Editar' : 'Novo' }} Responsável</div>
+      </div>
+      <div class="modal-body">
+      <div class="mb-2" style="font-size:0.73rem;color:var(--text-muted)">
         <i class="bi bi-info-circle"></i> Preencha os dados de pelo menos um dos dois. Dá pra cadastrar pai e mãe juntos, como um único responsável.
       </div>
 
@@ -69,9 +72,12 @@ async function salvar(): Promise<void> {
           <label class="form-check-label" for="respAtivo">Ativo</label>
         </div>
       </div>
-      <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary flex-fill" @click="ui.modals.resp = false">Cancelar</button>
-        <button class="btn-gold flex-fill justify-content-center" @click="salvar"><i class="bi bi-check-lg"></i> Salvar</button>
+      </div>
+      <div class="modal-footer">
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-fill" @click="ui.modals.resp = false">Cancelar</button>
+          <button class="btn-gold flex-fill justify-content-center" @click="salvar"><i class="bi bi-check-lg"></i> Salvar</button>
+        </div>
       </div>
     </div>
   </div>

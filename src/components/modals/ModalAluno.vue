@@ -45,10 +45,13 @@ async function salvar(): Promise<void> {
 </script>
 
 <template>
-  <div class="modal-backdrop-custom" v-if="ui.modals.aluno" @click.self="ui.modals.aluno = false">
-    <div class="modal-sheet">
+  <div class="modal-backdrop-custom modal" v-if="ui.modals.aluno" @click.self="ui.modals.aluno = false">
+    <div class="modal-sheet modal-content">
       <div class="modal-handle"></div>
-      <div class="modal-title"><i class="bi bi-person-fill"></i> {{ ui.formAluno.id ? 'Editar' : 'Novo' }} Aluno</div>
+      <div class="modal-header">
+        <div class="modal-title"><i class="bi bi-person-fill"></i> {{ ui.formAluno.id ? 'Editar' : 'Novo' }} Aluno</div>
+      </div>
+      <div class="modal-body">
       <div class="mb-3">
         <label class="form-label">Nome</label>
         <input class="form-control" v-model="ui.formAluno.nome" placeholder="Nome completo" />
@@ -63,7 +66,7 @@ async function salvar(): Promise<void> {
           <option value="">Sem núcleo fixo</option>
           <option v-for="n in nucleosForm" :key="n.id" :value="n.id">{{ n.nome }}{{ n.formaCobranca === 'mensalidade' ? ' (mensalidade)' : '' }}{{ !n.ativo ? ' (inativo)' : '' }}</option>
         </select>
-        <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px">
+        <div class="mt-1" style="font-size:0.73rem;color:var(--text-muted)">
           <i class="bi bi-info-circle"></i> Só é usado pra saber onde gerar a cobrança de mensalidade — não limita em quais núcleos ele tem aula.
         </div>
       </div>
@@ -84,7 +87,7 @@ async function salvar(): Promise<void> {
         <div v-else style="font-size:0.8rem;color:var(--chess-red)">
           <i class="bi bi-exclamation-circle"></i> Este núcleo ainda não tem turmas cadastradas. Crie uma na tela "Turmas".
         </div>
-        <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px">
+        <div class="mt-1" style="font-size:0.73rem;color:var(--text-muted)">
           <i class="bi bi-info-circle"></i> 1 aula fixa de 1h por semana, no dia e horário da turma.
         </div>
       </div>
@@ -94,7 +97,7 @@ async function salvar(): Promise<void> {
           <option value="">Sem responsável</option>
           <option v-for="r in catalog.responsaveis" :key="r.id" :value="r.id">{{ nomeResponsavel(r) }}{{ telefoneResponsavel(r) ? ' — ' + telefoneResponsavel(r) : '' }}</option>
         </select>
-        <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px">
+        <div class="mt-1" style="font-size:0.73rem;color:var(--text-muted)">
           <i class="bi bi-info-circle"></i> Vinculando um responsável, ele aparecerá no fechamento de cobrança.
         </div>
       </div>
@@ -108,9 +111,12 @@ async function salvar(): Promise<void> {
           <label class="form-check-label" for="alunoAtivo">Ativo</label>
         </div>
       </div>
-      <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary flex-fill" @click="ui.modals.aluno = false">Cancelar</button>
-        <button class="btn-gold flex-fill justify-content-center" @click="salvar"><i class="bi bi-check-lg"></i> Salvar</button>
+      </div>
+      <div class="modal-footer">
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-fill" @click="ui.modals.aluno = false">Cancelar</button>
+          <button class="btn-gold flex-fill justify-content-center" @click="salvar"><i class="bi bi-check-lg"></i> Salvar</button>
+        </div>
       </div>
     </div>
   </div>

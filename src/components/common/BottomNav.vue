@@ -17,7 +17,7 @@ const catalog = useCatalogStore();
       <i class="bi bi-journal-text"></i> Aulas
     </button>
     <button class="nav-btn pend-nav" :class="{active: ui.view === 'pendencias'}" @click="ui.view = 'pendencias'">
-      <div style="position:relative;display:inline-block">
+      <div class="position-relative d-inline-block">
         <i class="bi bi-exclamation-circle"></i>
         <span v-if="aulasStore.totalPendenciasGeral > 0" class="nav-badge">{{ aulasStore.totalPendenciasGeral }}</span>
       </div>

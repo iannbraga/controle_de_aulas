@@ -42,9 +42,9 @@ function alternarModo(): void {
 <template>
   <div class="login-screen">
     <div class="login-card">
-      <div class="topbar-icon" style="font-size:2.2rem;text-align:center;margin-bottom:6px">♟</div>
-      <div class="topbar-title" style="text-align:center;color:var(--text-primary);font-size:1.3rem;margin-bottom:2px">Clube de Xadrez</div>
-      <div style="text-align:center;color:var(--text-muted);font-size:.8rem;margin-bottom:22px">Gestão de Aulas</div>
+      <div class="topbar-icon text-center mb-1" style="font-size:2.2rem">♟</div>
+      <div class="topbar-title text-center" style="color:var(--text-primary);font-size:1.3rem;margin-bottom:2px">Clube de Xadrez</div>
+      <div class="text-center" style="color:var(--text-muted);font-size:.8rem;margin-bottom:22px">Gestão de Aulas</div>
 
       <form @submit.prevent="submit">
         <div class="mb-3">
@@ -56,10 +56,10 @@ function alternarModo(): void {
           <input class="form-control" type="password" v-model="password" placeholder="••••••••" autocomplete="current-password" minlength="6" required />
         </div>
 
-        <div v-if="auth.errorMsg" style="color:var(--chess-red);font-size:.8rem;margin-bottom:12px">
+        <div v-if="auth.errorMsg" class="mb-3" style="color:var(--chess-red);font-size:.8rem">
           <i class="bi bi-exclamation-circle-fill"></i> {{ auth.errorMsg }}
         </div>
-        <div v-if="infoMsg" style="color:var(--chess-green);font-size:.8rem;margin-bottom:12px">
+        <div v-if="infoMsg" class="mb-3" style="color:var(--chess-green);font-size:.8rem">
           <i class="bi bi-check-circle-fill"></i> {{ infoMsg }}
         </div>
 
@@ -69,7 +69,7 @@ function alternarModo(): void {
         </button>
       </form>
 
-      <div v-if="modo === 'criar' || settings.permitirCadastro" style="text-align:center;margin-top:16px;font-size:.82rem;color:var(--text-muted)">
+      <div v-if="modo === 'criar' || settings.permitirCadastro" class="text-center mt-3" style="font-size:.82rem;color:var(--text-muted)">
         <template v-if="modo === 'entrar'">
           Ainda não tem conta?
           <a href="#" @click.prevent="alternarModo">Criar conta</a>

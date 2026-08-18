@@ -56,19 +56,26 @@ function delAula(id: string): void {
     </div>
     <div v-for="grupo in aulasSortedMesPorNucleo" :key="grupo.nucleoId" class="mb-3">
       <div class="nucleo-group-header"><i class="bi bi-geo-alt-fill"></i><span>{{ grupo.nome }}</span><span class="nucleo-group-total">R$ {{ grupo.total.toFixed(2) }}</span></div>
-      <div v-for="aula in grupo.aulas" :key="aula.id" class="aula-card" style="margin-bottom:6px;margin-top:0;border-radius:0 0 8px 8px">
-        <div class="aula-card-header">
+      <div v-for="aula in grupo.aulas" :key="aula.id" class="card aula-card mb-2 mt-0" style="border-radius:0 0 8px 8px">
+        <div class="card-header aula-card-header">
           <div>
             <div class="aula-date">{{ formatDate(aula.data) }}</div>
           </div>
           <div class="d-flex gap-2 align-items-center">
             <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ aulasStore.valorAula(aula).toFixed(2) }}</div>
-            <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill" style="color:var(--chess-gold)"></i></button>
-            <button class="btn-icon" @click="editarAula(aula)"><i class="bi bi-pencil"></i></button>
-            <button class="btn-icon danger" @click="delAula(aula.id)"><i class="bi bi-trash"></i></button>
+            <div class="dropdown">
+              <button class="btn-icon" data-bs-toggle="dropdown" aria-expanded="false" title="Ações">
+                <i class="bi bi-three-dots-vertical"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><button class="dropdown-item" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill" style="color:var(--chess-gold)"></i> Financeiro</button></li>
+                <li><button class="dropdown-item" @click="editarAula(aula)"><i class="bi bi-pencil"></i> Editar</button></li>
+                <li><button class="dropdown-item text-danger" @click="delAula(aula.id)"><i class="bi bi-trash"></i> Excluir</button></li>
+              </ul>
+            </div>
           </div>
         </div>
-        <div class="aula-card-body">
+        <div class="card-body aula-card-body">
           <div class="aula-stat mb-1"><i class="bi bi-people-fill"></i> {{ getProfNomes(aula) }}</div>
           <div class="aula-stat"><i class="bi bi-person-check"></i> {{ alunosPresentes(aula) }} aluno(s) presente(s)</div>
           <div v-if="aulasStore.aulaTempendencia(aula)" class="aula-stat mt-1" style="color:#e65100">

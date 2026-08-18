@@ -66,10 +66,10 @@ function openFinanceiro(aula: Aula): void {
       <i class="bi bi-cash-stack" style="font-size:2rem;color:var(--chess-gold);opacity:.5"></i>
     </div>
 
-    <div class="section-header" style="margin-top:4px">
+    <div class="section-header mt-1">
       <div class="section-title" style="font-size:1.05rem">Por núcleo</div>
     </div>
-    <div v-if="finPorNucleo.length === 0" class="empty-state" style="padding:16px"><span style="font-size:.82rem">Nenhuma aula neste período.</span></div>
+    <div v-if="finPorNucleo.length === 0" class="empty-state p-3"><span style="font-size:.82rem">Nenhuma aula neste período.</span></div>
     <div class="nucleo-fin-grid mb-3" v-if="finPorNucleo.length > 0">
       <div v-for="nn in finPorNucleo" :key="nn.nucleoId" class="nucleo-fin-card">
         <div class="nfc-header"><i class="bi bi-geo-alt-fill" style="color:var(--chess-gold)"></i><span class="nfc-nome">{{ nn.nome }}</span></div>
@@ -82,18 +82,18 @@ function openFinanceiro(aula: Aula): void {
       </div>
     </div>
 
-    <div class="section-header" style="margin-top:4px">
+    <div class="section-header mt-1">
       <div class="section-title" style="font-size:1.05rem">Pagamento dos professores</div>
     </div>
-    <div v-if="finFechamento.length === 0" class="empty-state" style="padding:24px"><i class="bi bi-person-x"></i> Nenhum professor participou de aulas neste mês.</div>
+    <div v-if="finFechamento.length === 0" class="empty-state p-4"><i class="bi bi-person-x"></i> Nenhum professor participou de aulas neste mês.</div>
     <div v-for="fp in finFechamento" :key="fp.profId" class="prof-fechamento-card mb-2">
       <div class="pfc-header" @click="aulasStore.toggleProfDetalhe(fp.profId)">
-        <div class="avatar" style="width:38px;height:38px;font-size:.9rem;flex-shrink:0">{{ fp.nome[0] }}</div>
-        <div style="flex:1;min-width:0">
+        <div class="avatar flex-shrink-0" style="width:38px;height:38px;font-size:.9rem">{{ fp.nome[0] }}</div>
+        <div class="flex-fill" style="min-width:0">
           <div class="fp-nome">{{ fp.nome }}</div>
           <div class="fp-detalhe">{{ fp.numAulas }} aula(s) · peso médio {{ fp.pesoMedio.toFixed(2) }}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
+        <div class="d-flex align-items-center gap-2">
           <div class="fp-valor">R$ {{ fp.total.toFixed(2) }}</div>
           <i class="bi" :class="aulasStore.profDetalheAberto[fp.profId] ? 'bi-chevron-up' : 'bi-chevron-down'" style="color:var(--text-muted);font-size:.8rem"></i>
         </div>
@@ -113,17 +113,17 @@ function openFinanceiro(aula: Aula): void {
       </div>
     </div>
 
-    <div class="section-header" style="margin-top:8px">
+    <div class="section-header mt-2">
       <div class="section-title" style="font-size:1.05rem">Aulas do período</div>
     </div>
-    <div v-if="finAulasMes.length === 0" class="empty-state" style="padding:24px"><i class="bi bi-journal-x"></i> Nenhuma aula neste mês.</div>
-    <div v-if="finAulasMes.length > 0" class="fin-tabs mb-3">
-      <button class="fin-tab" :class="{active: finAgrupamento === 'lista'}" @click="finAgrupamento = 'lista'"><i class="bi bi-list-ul"></i> Lista</button>
-      <button class="fin-tab" :class="{active: finAgrupamento === 'nucleo'}" @click="finAgrupamento = 'nucleo'"><i class="bi bi-geo-alt"></i> Por núcleo</button>
+    <div v-if="finAulasMes.length === 0" class="empty-state p-4"><i class="bi bi-journal-x"></i> Nenhuma aula neste mês.</div>
+    <div v-if="finAulasMes.length > 0" class="nav nav-pills fin-tabs mb-3">
+      <button class="nav-link fin-tab" :class="{active: finAgrupamento === 'lista'}" @click="finAgrupamento = 'lista'"><i class="bi bi-list-ul"></i> Lista</button>
+      <button class="nav-link fin-tab" :class="{active: finAgrupamento === 'nucleo'}" @click="finAgrupamento = 'nucleo'"><i class="bi bi-geo-alt"></i> Por núcleo</button>
     </div>
     <div v-if="finAgrupamento === 'lista'">
-      <div v-for="aula in finAulasMes" :key="aula.id" class="aula-card">
-        <div class="aula-card-header">
+      <div v-for="aula in finAulasMes" :key="aula.id" class="card aula-card">
+        <div class="card-header aula-card-header">
           <div>
             <div class="aula-date">{{ formatDate(aula.data) }}</div>
             <div class="aula-nucleo">{{ catalog.getNucleoNome(aula.nucleoId) }}</div>
@@ -133,7 +133,7 @@ function openFinanceiro(aula: Aula): void {
             <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill" style="color:var(--chess-gold)"></i></button>
           </div>
         </div>
-        <div class="aula-card-body">
+        <div class="card-body aula-card-body">
           <div class="aula-stat mb-1"><i class="bi bi-people-fill"></i> {{ getProfNomes(aula) }}</div>
           <div class="aula-stat"><i class="bi bi-person-check"></i> {{ alunosPresentes(aula) }} aluno(s)</div>
         </div>
@@ -142,8 +142,8 @@ function openFinanceiro(aula: Aula): void {
     <div v-if="finAgrupamento === 'nucleo'">
       <div v-for="grupo in finAulasPorNucleo" :key="grupo.nucleoId" class="mb-3">
         <div class="nucleo-group-header"><i class="bi bi-geo-alt-fill"></i><span>{{ grupo.nome }}</span><span class="nucleo-group-total">R$ {{ grupo.total.toFixed(2) }}</span></div>
-        <div v-for="aula in grupo.aulas" :key="aula.id" class="aula-card" style="margin-bottom:6px;border-radius:0 0 8px 8px;margin-top:0">
-          <div class="aula-card-header" style="background:white">
+        <div v-for="aula in grupo.aulas" :key="aula.id" class="card aula-card mb-2 mt-0" style="border-radius:0 0 8px 8px">
+          <div class="card-header aula-card-header" style="background:white">
             <div>
               <div class="aula-date">{{ formatDate(aula.data) }}</div>
             </div>
@@ -152,7 +152,7 @@ function openFinanceiro(aula: Aula): void {
               <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill" style="color:var(--chess-gold)"></i></button>
             </div>
           </div>
-          <div class="aula-card-body" style="padding:8px 14px">
+          <div class="card-body aula-card-body py-2 px-3">
             <div class="aula-stat mb-1"><i class="bi bi-people-fill"></i> {{ getProfNomes(aula) }}</div>
             <div class="aula-stat"><i class="bi bi-person-check"></i> {{ alunosPresentes(aula) }} aluno(s)</div>
           </div>

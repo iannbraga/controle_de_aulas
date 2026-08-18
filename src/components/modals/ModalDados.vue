@@ -90,27 +90,30 @@ async function sair(): Promise<void> {
 </script>
 
 <template>
-  <div class="modal-backdrop-custom" v-if="ui.modals.dados" @click.self="closeDadosModal">
-    <div class="modal-sheet">
+  <div class="modal-backdrop-custom modal" v-if="ui.modals.dados" @click.self="closeDadosModal">
+    <div class="modal-sheet modal-content">
       <div class="modal-handle"></div>
-      <div class="modal-title"><i class="bi bi-database-fill"></i> Dados</div>
-      <div v-if="auth.user" style="font-size:.75rem;color:var(--text-muted);margin-bottom:14px;margin-top:-8px">
+      <div class="modal-header">
+        <div class="modal-title"><i class="bi bi-database-fill"></i> Dados</div>
+      </div>
+      <div class="modal-body">
+      <div v-if="auth.user" class="mb-3" style="font-size:.75rem;color:var(--text-muted);margin-top:-8px">
         <i class="bi bi-cloud-check-fill" style="color:var(--chess-green)"></i> Sincronizado com {{ auth.user.email }}
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:20px">
-        <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+      <div class="d-flex flex-wrap gap-2 mb-4">
+        <div class="text-center p-2" style="flex:1 1 64px;min-width:64px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px">
           <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{ aulasStore.aulas.length }}</div>
           <div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase">Aulas</div>
         </div>
-        <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div class="text-center p-2" style="flex:1 1 64px;min-width:64px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px">
           <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{ catalog.professores.length }}</div>
           <div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase">Profs</div>
         </div>
-        <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div class="text-center p-2" style="flex:1 1 64px;min-width:64px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px">
           <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{ catalog.alunos.length }}</div>
           <div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase">Alunos</div>
         </div>
-        <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div class="text-center p-2" style="flex:1 1 64px;min-width:64px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px">
           <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--chess-dark-brown)">{{ catalog.responsaveis.length }}</div>
           <div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase">Resp.</div>
         </div>
@@ -129,7 +132,7 @@ async function sair(): Promise<void> {
           <div class="do-sub">Restaura dados de um arquivo exportado anteriormente</div>
         </div>
       </button>
-      <input ref="importInput" type="file" accept=".json,application/json" style="display:none" @change="importarJSON($event)" />
+      <input ref="importInput" type="file" accept=".json,application/json" class="d-none" @change="importarJSON($event)" />
       <button class="dados-option" @click="abrirCompartilharMes">
         <div class="do-icon gold"><i class="bi bi-share"></i></div>
         <div>
@@ -137,22 +140,22 @@ async function sair(): Promise<void> {
           <div class="do-sub">Gera texto do mês atual para WhatsApp / e-mail</div>
         </div>
       </button>
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div class="d-flex align-items-center justify-content-between gap-3 mb-3" style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
         <div>
           <div style="font-size:.85rem;font-weight:600;color:var(--text-primary)"><i class="bi bi-person-plus-fill"></i> Permitir criação de conta</div>
           <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px">Quando desligado, a tela de login não oferece mais "Criar conta"</div>
         </div>
-        <div class="form-check form-switch mb-0" style="flex-shrink:0">
+        <div class="form-check form-switch mb-0 flex-shrink-0">
           <input class="form-check-input" type="checkbox" role="switch" style="width:2.5em;height:1.4em"
             :checked="settings.permitirCadastro" :disabled="settings.saving" @change="togglePermitirCadastro" />
         </div>
       </div>
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div class="d-flex align-items-center justify-content-between gap-3 mb-3" style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
         <div>
           <div style="font-size:.85rem;font-weight:600;color:var(--text-primary)"><i class="bi bi-clock-history"></i> Validade do cache</div>
           <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px">Minutos que os dados ficam salvos neste aparelho antes de consultar o Supabase de novo. Use 0 para desativar o cache.</div>
         </div>
-        <input type="number" min="0" step="1" class="form-control" style="width:70px;flex-shrink:0;text-align:center"
+        <input type="number" min="0" step="1" class="form-control text-center flex-shrink-0" style="width:70px"
           :value="settings.cacheTtlMinutos" :disabled="settings.saving" @change="alterarCacheTtl" />
       </div>
       <button class="dados-option" @click="sair">
@@ -162,7 +165,10 @@ async function sair(): Promise<void> {
           <div class="do-sub">Encerra a sessão de {{ auth.user?.email }}</div>
         </div>
       </button>
-      <button class="btn btn-outline-secondary w-100 mt-2" @click="closeDadosModal">Fechar</button>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary w-100" @click="closeDadosModal">Fechar</button>
+      </div>
     </div>
   </div>
 </template>

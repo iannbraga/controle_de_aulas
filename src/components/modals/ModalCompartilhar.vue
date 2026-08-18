@@ -37,19 +37,25 @@ function compartilharNativo(): void {
 </script>
 
 <template>
-  <div class="modal-backdrop-custom" v-if="ui.modals.compartilhar" @click.self="ui.modals.compartilhar = false">
-    <div class="modal-sheet">
+  <div class="modal-backdrop-custom modal" v-if="ui.modals.compartilhar" @click.self="ui.modals.compartilhar = false">
+    <div class="modal-sheet modal-content">
       <div class="modal-handle"></div>
-      <div class="modal-title"><i class="bi bi-share"></i> Fechamento para Compartilhar</div>
-      <div class="mes-nav" style="margin-bottom:14px">
-        <button class="mes-btn" @click="shareMesOffset--">‹</button>
-        <div class="mes-label">{{ shareMesLabel }}</div>
-        <button class="mes-btn" @click="shareMesOffset++" :disabled="shareMesOffset >= 0">›</button>
+      <div class="modal-header">
+        <div class="modal-title"><i class="bi bi-share"></i> Fechamento para Compartilhar</div>
       </div>
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:.8rem;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;max-height:320px;overflow-y:auto;font-family:monospace">{{ textoCompartilhar }}</div>
-      <div class="d-flex gap-2 mt-3">
-        <button class="btn btn-outline-secondary flex-fill" @click="copiarTexto"><i class="bi bi-clipboard"></i> Copiar</button>
-        <button class="btn-gold flex-fill justify-content-center" @click="compartilharNativo" v-if="podeCompartilharNativo"><i class="bi bi-share"></i> Compartilhar</button>
+      <div class="modal-body">
+        <div class="mes-nav mb-3">
+          <button class="mes-btn" @click="shareMesOffset--">‹</button>
+          <div class="mes-label">{{ shareMesLabel }}</div>
+          <button class="mes-btn" @click="shareMesOffset++" :disabled="shareMesOffset >= 0">›</button>
+        </div>
+        <div class="p-3" style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;font-size:.8rem;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;max-height:320px;overflow-y:auto;font-family:monospace">{{ textoCompartilhar }}</div>
+      </div>
+      <div class="modal-footer">
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-fill" @click="copiarTexto"><i class="bi bi-clipboard"></i> Copiar</button>
+          <button class="btn-gold flex-fill justify-content-center" @click="compartilharNativo" v-if="podeCompartilharNativo"><i class="bi bi-share"></i> Compartilhar</button>
+        </div>
       </div>
     </div>
   </div>

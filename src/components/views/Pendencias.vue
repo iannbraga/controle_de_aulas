@@ -47,12 +47,12 @@ function incrementMes(): void { if (pendMesOffset.value !== null && pendMesOffse
       </div>
     </div>
 
-    <div class="fin-tabs mb-2">
-      <button class="fin-tab" :class="{active: pendTab === 'abertas'}" @click="pendTab = 'abertas'">
+    <div class="nav nav-pills fin-tabs mb-2">
+      <button class="nav-link fin-tab" :class="{active: pendTab === 'abertas'}" @click="pendTab = 'abertas'">
         <i class="bi bi-clock-fill"></i> Em aberto
-        <span v-if="aulasStore.todasPendencias.length > 0" style="margin-left:4px;background:var(--chess-red);color:#fff;border-radius:99px;padding:1px 7px;font-size:.7rem">{{ aulasStore.todasPendencias.length }}</span>
+        <span v-if="aulasStore.todasPendencias.length > 0" class="badge rounded-pill ms-1 text-bg-danger">{{ aulasStore.todasPendencias.length }}</span>
       </button>
-      <button class="fin-tab" :class="{active: pendTab === 'pagas'}" @click="pendTab = 'pagas'">
+      <button class="nav-link fin-tab" :class="{active: pendTab === 'pagas'}" @click="pendTab = 'pagas'">
         <i class="bi bi-check-circle-fill"></i> Pagas
       </button>
     </div>
@@ -70,7 +70,7 @@ function incrementMes(): void { if (pendMesOffset.value !== null && pendMesOffse
       <div class="mes-label">{{ pendMesOffset === null ? 'Todas' : pendMesLabel }}</div>
       <button class="mes-btn" @click="incrementMes" :disabled="pendMesOffset === null || pendMesOffset >= 0">›</button>
     </div>
-    <div style="text-align:center;margin-bottom:12px">
+    <div class="text-center" style="margin-bottom:12px">
       <button class="btn btn-sm" :class="pendMesOffset === null ? 'btn-dark' : 'btn-outline-secondary'" @click="pendMesOffset = null" style="font-size:.72rem;margin-top:6px">Todas as pendências</button>
     </div>
 
@@ -80,10 +80,10 @@ function incrementMes(): void { if (pendMesOffset.value !== null && pendMesOffse
     </div>
 
     <template v-if="pendTab === 'abertas'">
-      <div v-for="pa in pendenciasFiltradas" :key="pa.alunoId" class="pendencia-card">
-        <div class="pendencia-card-header">
+      <div v-for="pa in pendenciasFiltradas" :key="pa.alunoId" class="card pendencia-card">
+        <div class="card-header pendencia-card-header">
           <div class="avatar-pend">{{ pa.nome[0] }}</div>
-          <div style="flex:1;min-width:0">
+          <div class="flex-fill" style="min-width:0">
             <div class="pend-nome">{{ pa.nome }}</div>
             <div class="pend-meta">{{ pa.aulas.length }} aula(s) em aberto</div>
             <div v-if="pa.responsavel" class="pend-resp">
@@ -93,7 +93,7 @@ function incrementMes(): void { if (pendMesOffset.value !== null && pendMesOffse
           </div>
           <div class="pend-total">R$ {{ pa.total.toFixed(2) }}</div>
         </div>
-        <div class="pendencia-card-body">
+        <div class="card-body pendencia-card-body">
           <div v-for="item in pa.aulas" :key="item.aulaId" class="pend-aula-item">
             <div>
               <span class="pend-data">{{ formatDate(item.data) }}</span>
@@ -107,7 +107,7 @@ function incrementMes(): void { if (pendMesOffset.value !== null && pendMesOffse
             </div>
           </div>
         </div>
-        <div class="pendencia-card-footer">
+        <div class="card-footer pendencia-card-footer">
           <button class="btn-pend-all" @click="aulasStore.marcarTodosPagos(pa)">
             <i class="bi bi-check-all"></i> Marcar todos como pagos
           </button>
@@ -116,10 +116,10 @@ function incrementMes(): void { if (pendMesOffset.value !== null && pendMesOffse
     </template>
 
     <template v-if="pendTab === 'pagas'">
-      <div v-for="pa in pendenciasFiltradas" :key="'pago-' + pa.alunoId" class="pendencia-card" style="opacity:.8">
-        <div class="pendencia-card-header">
+      <div v-for="pa in pendenciasFiltradas" :key="'pago-' + pa.alunoId" class="card pendencia-card" style="opacity:.8">
+        <div class="card-header pendencia-card-header">
           <div class="avatar-pend" style="background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7">{{ pa.nome[0] }}</div>
-          <div style="flex:1;min-width:0">
+          <div class="flex-fill" style="min-width:0">
             <div class="pend-nome">{{ pa.nome }}</div>
             <div class="pend-meta" style="color:var(--chess-green)">{{ pa.aulas.length }} aula(s) paga(s)</div>
             <div v-if="pa.responsavel" class="pend-resp">
@@ -129,7 +129,7 @@ function incrementMes(): void { if (pendMesOffset.value !== null && pendMesOffse
           </div>
           <div class="pend-total" style="color:var(--chess-green)">R$ {{ pa.total.toFixed(2) }}</div>
         </div>
-        <div class="pendencia-card-body">
+        <div class="card-body pendencia-card-body">
           <div v-for="item in pa.aulas" :key="item.aulaId" class="pend-aula-item">
             <div>
               <span class="pend-data">{{ formatDate(item.data) }}</span>

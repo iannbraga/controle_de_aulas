@@ -20,6 +20,12 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  overflow-x: hidden;
+  width: 100%;
 }
 
 body {
@@ -27,6 +33,15 @@ body {
   font-family: 'DM Sans', sans-serif;
   color: var(--text-primary);
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Área segura de dispositivos com notch/home indicator (iPhone) */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 [v-cloak] {
@@ -45,8 +60,9 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 16px;
+  padding: calc(10px + var(--safe-top)) 16px 10px;
   box-shadow: 0 2px 12px #0004;
+  min-width: 0;
 }
 
 .topbar-icon {
@@ -89,16 +105,26 @@ body {
   border-top: 1px solid #5d402080;
   z-index: 100;
   overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding-bottom: var(--safe-bottom);
+}
+
+.bottom-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-btn {
-  flex: 1;
-  min-width: 52px;
+  flex: 1 0 auto;
+  min-width: 58px;
+  min-height: 44px;
   background: none;
   border: none;
   color: #bbb;
   font-size: 0.6rem;
-  padding: 8px 4px 10px;
+  padding: 8px 6px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -106,6 +132,7 @@ body {
   cursor: pointer;
   transition: color .15s;
   white-space: nowrap;
+  scroll-snap-align: start;
 }
 
 .nav-btn i {
@@ -130,9 +157,11 @@ body {
 
 /* MAIN VIEW */
 .main-view {
-  padding: 72px 14px 80px;
+  padding: calc(72px + var(--safe-top)) 14px calc(84px + var(--safe-bottom));
   max-width: 540px;
   margin: 0 auto;
+  width: 100%;
+  min-width: 0;
 }
 
 /* CARDS */
@@ -196,6 +225,21 @@ body {
   border-bottom: none;
 }
 
+/* Linhas de lista usam a classe real do Bootstrap list-group-item por cima
+   de .list-item (que já cuida da cor/gap/borda-inferior) — zera as bordas
+   laterais/superior que o Bootstrap coloca por padrão, pra não duplicar. */
+.list-group-item.list-item {
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  border-radius: 0 !important;
+}
+
+.list-group.card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
 .avatar {
   width: 40px;
   height: 40px;
@@ -231,6 +275,34 @@ body {
   gap: 6px;
 }
 
+/* DROPDOWN (menu de ações, ex: Responsáveis) — nosso reset global zera o
+   padding padrão do Bootstrap, então repomos aqui. */
+.dropdown-menu {
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px #0002;
+  min-width: 200px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-primary);
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background: var(--surface-2);
+}
+
 /* BUTTONS */
 .btn-gold {
   background: var(--chess-gold);
@@ -247,18 +319,25 @@ body {
   gap: 6px;
 }
 
+.btn-gold,
+.btn-pend-all,
+.mes-btn {
+  min-height: 40px;
+}
+
 .btn-icon {
   background: none;
   border: 1px solid var(--border);
   border-radius: 7px;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: var(--text-secondary);
   font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .btn-icon.danger {
@@ -283,12 +362,14 @@ body {
 /* STATS */
 .stat-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 14px;
 }
 
 .stat-mini {
-  flex: 1;
+  flex: 1 1 80px;
+  min-width: 80px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -343,7 +424,8 @@ body {
   font-size: 1.3rem;
   color: var(--chess-dark-brown);
   cursor: pointer;
-  padding: 0 6px;
+  padding: 0 10px;
+  min-width: 40px;
 }
 
 .mes-btn:disabled {
@@ -409,12 +491,20 @@ body {
 .confirm-box {
   background: white;
   border-radius: 16px;
-  padding: 24px;
+  padding: 0;
   max-width: 320px;
   width: 100%;
+  border: none;
 }
 
-/* MODAL */
+.confirm-box > .modal-body {
+  padding: 24px;
+}
+
+/* MODAL — usa as classes reais do Bootstrap (modal, modal-backdrop,
+   modal-content, modal-header, modal-body, modal-footer) por baixo, com
+   nossas próprias regras (carregadas depois do CDN do Bootstrap) reformando
+   isso pro formato de "bottom sheet" mobile que já usávamos. */
 .modal-backdrop-custom {
   position: fixed;
   inset: 0;
@@ -428,9 +518,14 @@ body {
   background: white;
   border-radius: 20px 20px 0 0;
   width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
   max-height: 90vh;
+  max-height: 90dvh;
   overflow-y: auto;
-  padding: 16px 20px 30px;
+  -webkit-overflow-scrolling: touch;
+  padding: 0;
+  border: none;
 }
 
 .modal-handle {
@@ -438,16 +533,34 @@ body {
   height: 4px;
   background: #ddd;
   border-radius: 2px;
-  margin: 0 auto 16px;
+  margin: 10px auto 0;
+}
+
+.modal-sheet > .modal-header {
+  padding: 10px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
 }
 
 .modal-title {
   font-family: 'DM Serif Display', serif;
   font-size: 1.2rem;
   color: var(--chess-dark-brown);
-  margin-bottom: 18px;
+  margin-bottom: 0;
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.modal-sheet > .modal-body {
+  padding: 16px 20px;
+}
+
+.modal-sheet > .modal-footer {
+  padding: 12px 20px calc(20px + var(--safe-bottom));
+  border-top: 1px solid var(--border);
+  flex-direction: column;
+  align-items: stretch;
   gap: 8px;
 }
 
@@ -463,11 +576,17 @@ body {
 .form-select {
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 9px 12px;
+  padding: 10px 12px;
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.88rem;
+  /* 16px evita o zoom automático do Safari/iOS ao focar um campo */
+  font-size: 16px;
   background: var(--surface-2);
   width: 100%;
+  min-height: 44px;
+}
+
+textarea.form-control {
+  min-height: unset;
 }
 
 .form-control:focus,
@@ -493,13 +612,14 @@ body {
   color: white;
   border: none;
   border-radius: 6px;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   font-size: 1.1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .peso-value {
@@ -561,24 +681,35 @@ body {
 .aluno-check-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 0;
+  gap: 8px;
+  padding: 9px 0;
   border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+
+.aluno-check-item input[type="checkbox"] {
+  flex-shrink: 0;
 }
 
 .aluno-check-item .nome {
   flex: 1;
+  min-width: 0;
   font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .valor-input {
-  width: 72px;
+  width: 76px;
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 5px 8px;
-  font-size: 0.82rem;
+  padding: 7px 8px;
+  font-size: 16px;
   text-align: right;
   background: var(--surface-2);
+  flex-shrink: 0;
 }
 
 .valor-input:disabled {
@@ -594,14 +725,15 @@ body {
   background: none;
   border: 1px solid var(--border);
   border-radius: 6px;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-size: 0.85rem;
   color: #bbb;
+  flex-shrink: 0;
 }
 
 .pst-btn.active {
@@ -835,7 +967,7 @@ body {
 
 .nucleo-fin-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 8px;
 }
 
@@ -986,9 +1118,20 @@ body {
   border-radius: 8px 8px 0 0;
   padding: 8px 14px;
   font-size: 0.82rem;
+  font-family: inherit;
   display: flex;
   align-items: center;
   gap: 8px;
+  text-align: left;
+  border: none;
+}
+
+button.nucleo-group-header {
+  cursor: pointer;
+}
+
+button.nucleo-group-header:hover {
+  filter: brightness(1.1);
 }
 
 .nucleo-group-total {

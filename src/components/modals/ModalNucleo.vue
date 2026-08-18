@@ -36,10 +36,13 @@ async function salvar(): Promise<void> {
 </script>
 
 <template>
-  <div class="modal-backdrop-custom" v-if="ui.modals.nucleo" @click.self="ui.modals.nucleo = false">
-    <div class="modal-sheet">
+  <div class="modal-backdrop-custom modal" v-if="ui.modals.nucleo" @click.self="ui.modals.nucleo = false">
+    <div class="modal-sheet modal-content">
       <div class="modal-handle"></div>
-      <div class="modal-title"><i class="bi bi-geo-alt-fill"></i> {{ ui.formNucleo.id ? 'Editar' : 'Novo' }} Núcleo</div>
+      <div class="modal-header">
+        <div class="modal-title"><i class="bi bi-geo-alt-fill"></i> {{ ui.formNucleo.id ? 'Editar' : 'Novo' }} Núcleo</div>
+      </div>
+      <div class="modal-body">
       <div class="mb-3">
         <label class="form-label">Nome</label>
         <input class="form-control" v-model="ui.formNucleo.nome" placeholder="Ex: Cesar Maingha" />
@@ -54,22 +57,22 @@ async function salvar(): Promise<void> {
           <option value="porAula">Por aula (cobra no fim do mês pelas aulas frequentadas)</option>
           <option value="mensalidade">Mensalidade (aluno paga um valor fixo adiantado por mês)</option>
         </select>
-        <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px">
+        <div class="mt-1" style="font-size:0.73rem;color:var(--text-muted)">
           <i class="bi bi-info-circle"></i> Com mensalidade, a cobrança aparece na tela "Mensalidades" e é gerada antes das aulas do mês (ex: Maple Bear).
         </div>
       </div>
       <div class="mb-3" v-if="ui.formNucleo.formaCobranca === 'mensalidade'">
         <label class="form-label">Grade de horários</label>
-        <div style="font-size:0.73rem;color:var(--text-muted);margin-bottom:6px">
+        <div class="mb-2" style="font-size:0.73rem;color:var(--text-muted)">
           <i class="bi bi-info-circle"></i> Horários oferecidos por este núcleo — usados para montar as Turmas (dia + horário) em que os alunos se matriculam.
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px" v-if="ui.formNucleo.horarios.length > 0">
-          <span v-for="h in ui.formNucleo.horarios" :key="h" class="badge-nivel" style="display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-primary)">
+        <div class="d-flex flex-wrap gap-2 mb-2" v-if="ui.formNucleo.horarios.length > 0">
+          <span v-for="h in ui.formNucleo.horarios" :key="h" class="badge-nivel d-flex align-items-center gap-2" style="background:var(--surface-2);border:1px solid var(--border);color:var(--text-primary)">
             {{ h }}
             <i class="bi bi-x-circle-fill" style="cursor:pointer;color:var(--chess-red)" @click="removerHorario(h)"></i>
           </span>
         </div>
-        <div style="display:flex;gap:6px">
+        <div class="d-flex gap-2">
           <input class="form-control" v-model="novoHorario" placeholder="Ex: 08:00-09:00" @keyup.enter="adicionarHorario" />
           <button type="button" class="btn btn-outline-secondary" @click="adicionarHorario"><i class="bi bi-plus-lg"></i></button>
         </div>
@@ -86,13 +89,16 @@ async function salvar(): Promise<void> {
           <input class="form-check-input" type="checkbox" v-model="ui.formNucleo.ativo" id="nucleoAtivo" />
           <label class="form-check-label" for="nucleoAtivo">Ativo</label>
         </div>
-        <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px">
+        <div class="mt-1" style="font-size:0.73rem;color:var(--text-muted)">
           <i class="bi bi-info-circle"></i> Núcleos inativos somem das opções ao registrar novas aulas ou matricular alunos, mas o histórico continua intacto.
         </div>
       </div>
-      <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary flex-fill" @click="ui.modals.nucleo = false">Cancelar</button>
-        <button class="btn-gold flex-fill justify-content-center" @click="salvar"><i class="bi bi-check-lg"></i> Salvar</button>
+      </div>
+      <div class="modal-footer">
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-fill" @click="ui.modals.nucleo = false">Cancelar</button>
+          <button class="btn-gold flex-fill justify-content-center" @click="salvar"><i class="bi bi-check-lg"></i> Salvar</button>
+        </div>
       </div>
     </div>
   </div>

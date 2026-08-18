@@ -46,37 +46,39 @@ async function toggleAtivo(aluno: Aluno): Promise<void> {
     </div>
     <div v-if="catalog.alunos.length === 0" class="empty-state"><i class="bi bi-person-x"></i> Nenhum aluno cadastrado.</div>
     <div v-else-if="alunosExibidos.length === 0" class="empty-state"><i class="bi bi-person-x"></i> Nenhum aluno ativo.</div>
-    <div class="card p-0" v-if="alunosExibidos.length > 0">
-      <div v-for="(aluno, idx) in alunosExibidos" :key="aluno.id" class="list-item" :style="idx === 0 ? 'border-radius:12px 12px 0 0' : ''">
-        <div class="avatar">{{ aluno.nome[0] }}</div>
+    <div class="card list-group p-0" v-if="alunosExibidos.length > 0">
+      <div v-for="aluno in alunosExibidos" :key="aluno.id" class="list-group-item list-item">
+        <div class="avatar rounded-circle">{{ aluno.nome[0] }}</div>
         <div class="info">
           <div class="nome">{{ aluno.nome }}</div>
           <div class="meta mt-1 d-flex flex-wrap gap-2">
             <span>R$ {{ aluno.valorPadrao.toFixed(2) }}/aula</span>
             <span v-if="aluno.telefone"><i class="bi bi-phone"></i> {{ aluno.telefone }}</span>
-            <span :class="aluno.ativo ? 'text-success' : 'text-danger'" style="font-size:.7rem">
-              <i :class="aluno.ativo ? 'bi bi-circle-fill' : 'bi bi-circle'" style="font-size:.5rem"></i>
-              {{ aluno.ativo ? 'Ativo' : 'Inativo' }}
-            </span>
+            <span class="badge rounded-pill" :class="aluno.ativo ? 'text-bg-success' : 'text-bg-danger'" style="font-size:.65rem">{{ aluno.ativo ? 'Ativo' : 'Inativo' }}</span>
           </div>
           <div v-if="aluno.responsavelId" class="meta mt-1">
-            <span class="resp-badge"><i class="bi bi-person-badge-fill"></i> {{ catalog.getRespNome(aluno.responsavelId) }}</span>
+            <span class="badge resp-badge"><i class="bi bi-person-badge-fill"></i> {{ catalog.getRespNome(aluno.responsavelId) }}</span>
           </div>
           <div v-if="turmaLabel(aluno)" class="meta mt-1">
             <span><i class="bi bi-calendar-week"></i> {{ turmaLabel(aluno) }}</span>
           </div>
-          <div v-if="aulasStore.getPendenciasAluno(aluno.id).length > 0" style="font-size:.72rem;color:#e65100;margin-top:3px">
+          <div v-if="aulasStore.getPendenciasAluno(aluno.id).length > 0" class="mt-1" style="font-size:.72rem;color:#e65100">
             <i class="bi bi-exclamation-circle-fill"></i>
             {{ aulasStore.getPendenciasAluno(aluno.id).length }} pendência(s) · R$ {{ aulasStore.getPendenciasAluno(aluno.id).reduce((s, p) => s + p.valor, 0).toFixed(2) }}
           </div>
           <div v-if="aluno.observacoes" class="meta mt-1" style="font-style:italic">{{ aluno.observacoes }}</div>
         </div>
-        <div class="actions">
-          <button class="btn-icon" :title="aluno.ativo ? 'Desativar' : 'Reativar'" @click="toggleAtivo(aluno)">
-            <i :class="aluno.ativo ? 'bi bi-toggle2-on text-success' : 'bi bi-toggle2-off text-danger'"></i>
+        <div class="dropdown">
+          <button class="btn-icon" data-bs-toggle="dropdown" aria-expanded="false" title="Ações">
+            <i class="bi bi-three-dots-vertical"></i>
           </button>
-          <button class="btn-icon" @click="ui.openModalAluno(aluno)"><i class="bi bi-pencil"></i></button>
-          <button class="btn-icon danger" @click="delAluno(aluno.id)"><i class="bi bi-trash"></i></button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><button class="dropdown-item" @click="toggleAtivo(aluno)">
+              <i :class="aluno.ativo ? 'bi bi-toggle2-on text-success' : 'bi bi-toggle2-off text-danger'"></i> {{ aluno.ativo ? 'Desativar' : 'Reativar' }}
+            </button></li>
+            <li><button class="dropdown-item" @click="ui.openModalAluno(aluno)"><i class="bi bi-pencil"></i> Editar</button></li>
+            <li><button class="dropdown-item text-danger" @click="delAluno(aluno.id)"><i class="bi bi-trash"></i> Excluir</button></li>
+          </ul>
         </div>
       </div>
     </div>

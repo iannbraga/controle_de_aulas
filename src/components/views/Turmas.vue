@@ -70,31 +70,33 @@ async function toggleAtivo(turma: Turma): Promise<void> {
     <div v-for="nucleo in nucleosMensalidade" :key="nucleo.id" class="mb-3">
       <div class="nucleo-group-header">
         <i class="bi bi-geo-alt-fill"></i><span>{{ nucleo.nome }}</span>
-        <button class="btn-icon" style="margin-left:auto" title="Nova turma" @click="novaTurma(nucleo)"><i class="bi bi-plus-circle"></i></button>
+        <button class="btn-icon ms-auto" title="Nova turma" @click="novaTurma(nucleo)"><i class="bi bi-plus-circle"></i></button>
       </div>
-      <div v-if="turmasDoNucleo(nucleo.id).length === 0" class="empty-state" style="padding:16px">
+      <div v-if="turmasDoNucleo(nucleo.id).length === 0" class="empty-state p-3">
         <span style="font-size:.82rem">Nenhuma turma cadastrada neste núcleo ainda.</span>
       </div>
-      <div v-for="turma in turmasDoNucleo(nucleo.id)" :key="turma.id" class="list-item">
-        <div class="avatar" style="background:var(--chess-dark-brown);color:white;border-color:var(--chess-dark-brown)">
+      <div v-for="turma in turmasDoNucleo(nucleo.id)" :key="turma.id" class="list-group-item list-item">
+        <div class="avatar rounded-circle" style="background:var(--chess-dark-brown);color:white;border-color:var(--chess-dark-brown)">
           <i class="bi bi-calendar-week" style="font-size:.9rem"></i>
         </div>
         <div class="info">
           <div class="nome">{{ diaLabel(turma) }} — {{ turma.horario }}</div>
           <div class="meta mt-1 d-flex flex-wrap gap-2">
             <span><i class="bi bi-people"></i> {{ catalog.getAlunosDaTurma(turma.id).length }} aluno(s)</span>
-            <span :class="turma.ativo ? 'text-success' : 'text-danger'" style="font-size:.7rem">
-              <i :class="turma.ativo ? 'bi bi-circle-fill' : 'bi bi-circle'" style="font-size:.5rem"></i>
-              {{ turma.ativo ? 'Ativa' : 'Inativa' }}
-            </span>
+            <span class="badge rounded-pill" :class="turma.ativo ? 'text-bg-success' : 'text-bg-danger'" style="font-size:.65rem">{{ turma.ativo ? 'Ativa' : 'Inativa' }}</span>
           </div>
         </div>
-        <div class="actions">
-          <button class="btn-icon" :title="turma.ativo ? 'Desativar' : 'Reativar'" @click="toggleAtivo(turma)">
-            <i :class="turma.ativo ? 'bi bi-toggle2-on text-success' : 'bi bi-toggle2-off text-danger'"></i>
+        <div class="dropdown">
+          <button class="btn-icon" data-bs-toggle="dropdown" aria-expanded="false" title="Ações">
+            <i class="bi bi-three-dots-vertical"></i>
           </button>
-          <button class="btn-icon" @click="editarTurma(turma)"><i class="bi bi-pencil"></i></button>
-          <button class="btn-icon danger" @click="delTurma(turma)"><i class="bi bi-trash"></i></button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><button class="dropdown-item" @click="toggleAtivo(turma)">
+              <i :class="turma.ativo ? 'bi bi-toggle2-on text-success' : 'bi bi-toggle2-off text-danger'"></i> {{ turma.ativo ? 'Desativar' : 'Reativar' }}
+            </button></li>
+            <li><button class="dropdown-item" @click="editarTurma(turma)"><i class="bi bi-pencil"></i> Editar</button></li>
+            <li><button class="dropdown-item text-danger" @click="delTurma(turma)"><i class="bi bi-trash"></i> Excluir</button></li>
+          </ul>
         </div>
       </div>
     </div>

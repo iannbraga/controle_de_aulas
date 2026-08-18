@@ -9,7 +9,7 @@ const aulasStore = useAulasStore();
 <template>
   <div class="topbar">
     <div class="topbar-icon">♟</div>
-    <div style="flex:1">
+    <div class="flex-fill">
       <div class="topbar-title">Clube de Xadrez</div>
       <div class="topbar-subtitle">Gestão de Aulas</div>
     </div>
@@ -17,7 +17,8 @@ const aulasStore = useAulasStore();
       <i class="bi bi-exclamation-circle-fill"></i> {{ aulasStore.totalPendenciasGeral }}
     </div>
     <button @click="ui.modals.dados = true"
-      style="background:none;border:none;color:#aaa;font-size:1.3rem;cursor:pointer;padding:4px"
+      class="p-1"
+      style="background:none;border:none;color:#aaa;font-size:1.3rem;cursor:pointer"
       title="Exportar / Importar dados">
       <i class="bi bi-gear"></i>
     </button>

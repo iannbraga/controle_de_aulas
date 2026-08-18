@@ -69,10 +69,13 @@ async function salvar(): Promise<void> {
 </script>
 
 <template>
-  <div class="modal-backdrop-custom" v-if="ui.modals.aula" @click.self="ui.modals.aula = false">
-    <div class="modal-sheet">
+  <div class="modal-backdrop-custom modal" v-if="ui.modals.aula" @click.self="ui.modals.aula = false">
+    <div class="modal-sheet modal-content">
       <div class="modal-handle"></div>
-      <div class="modal-title"><i class="bi bi-journal-plus"></i> {{ aulasStore.form.id ? 'Editar' : 'Registrar' }} Aula</div>
+      <div class="modal-header">
+        <div class="modal-title"><i class="bi bi-journal-plus"></i> {{ aulasStore.form.id ? 'Editar' : 'Registrar' }} Aula</div>
+      </div>
+      <div class="modal-body">
       <div class="mb-3">
         <label class="form-label">Data</label>
         <input class="form-control" type="date" v-model="aulasStore.form.data" />
@@ -100,7 +103,7 @@ async function salvar(): Promise<void> {
           <span v-for="prof in catalog.professoresAtivos" :key="prof.id" class="toggle-pill" :class="{selected: aulasStore.aulaHasProf(prof.id)}" @click="aulasStore.toggleProfAula(prof.id, prof.peso)">{{ prof.nome }}</span>
         </div>
         <div class="mt-2" v-if="aulasStore.form.professores.length > 0">
-          <div v-for="ap in aulasStore.form.professores" :key="ap.professorId" style="font-size:.78rem;color:var(--text-secondary);margin-top:4px">
+          <div v-for="ap in aulasStore.form.professores" :key="ap.professorId" class="mt-1" style="font-size:.78rem;color:var(--text-secondary)">
             <strong>{{ catalog.getProfNome(ap.professorId) }}</strong> — peso {{ ap.pesoAplicado }}
           </div>
         </div>
@@ -130,7 +133,7 @@ async function salvar(): Promise<void> {
           <div style="font-size:.7rem;color:#aaa">Total desta aula</div>
           <div class="t-valor">R$ {{ aulasStore.calcTotalForm().toFixed(2) }}</div>
         </div>
-        <div style="font-size:.75rem;color:#ccc;text-align:right" v-if="aulasStore.form.professores.length">
+        <div class="text-end" style="font-size:.75rem;color:#ccc" v-if="aulasStore.form.professores.length">
           {{ aulasStore.form.professores.length }} prof(s)
         </div>
       </div>
@@ -138,9 +141,12 @@ async function salvar(): Promise<void> {
         <label class="form-label">Observações</label>
         <textarea class="form-control" v-model="aulasStore.form.observacoes" rows="2"></textarea>
       </div>
-      <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary flex-fill" @click="ui.modals.aula = false">Cancelar</button>
-        <button class="btn-gold flex-fill justify-content-center" @click="salvar"><i class="bi bi-check-lg"></i> Salvar Aula</button>
+      </div>
+      <div class="modal-footer">
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-fill" @click="ui.modals.aula = false">Cancelar</button>
+          <button class="btn-gold flex-fill justify-content-center" @click="salvar"><i class="bi bi-check-lg"></i> Salvar Aula</button>
+        </div>
       </div>
     </div>
   </div>

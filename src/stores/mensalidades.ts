@@ -48,12 +48,25 @@ export const useMensalidadesStore = defineStore('mensalidades', () => {
     return getDoMes(nucleoId, ano, mes).reduce((s, m) => s + (m.valor || 0), 0);
   }
 
+  /** true se {ano, mes} já passou em relação ao mês corrente do calendário. */
+  function isMesPassado(ano: number, mes: number): boolean {
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth();
+    return ano < anoAtual || (ano === anoAtual && mes < mesAtual);
+  }
+
   /**
    * Garante que todo aluno ativo matriculado no núcleo tenha uma cobrança de
    * mensalidade gerada para o mês informado (cria só o que estiver faltando —
    * chamado sempre que a tela de Mensalidades é aberta/navegada).
+   *
+   * Só gera cobrança nova para o mês ATUAL (ou futuro) — meses que já
+   * passaram são só consulta: navegar até um mês anterior não deve criar
+   * cobranças novas nele, só mostrar as que já existiam.
    */
   async function garantirMes(nucleoId: string, ano: number, mes: number): Promise<void> {
+    if (isMesPassado(ano, mes)) return;
     const catalog = useCatalogStore();
     const alunosDoNucleo = catalog.alunos.filter(a => a.ativo && a.nucleoId === nucleoId);
     const existentes = new Set(getDoMes(nucleoId, ano, mes).map(m => m.alunoId));

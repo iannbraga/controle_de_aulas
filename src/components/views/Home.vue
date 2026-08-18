@@ -76,12 +76,12 @@ function getProfNomes(aula: any): string {
     <div v-if="aulasMes.length === 0" class="empty-state"><i class="bi bi-journal-x"></i> Nenhuma aula neste mês.</div>
     <div v-for="grupo in aulasMesPorNucleo" :key="grupo.nucleoId" class="mb-3">
       <div class="nucleo-group-header"><i class="bi bi-geo-alt-fill"></i><span>{{ grupo.nome }}</span><span class="nucleo-group-total">R$ {{ grupo.total.toFixed(2) }}</span></div>
-      <div v-for="aula in grupo.aulas" :key="aula.id" class="aula-card" style="margin-bottom:6px;margin-top:0;border-radius:0 0 8px 8px">
+      <div v-for="aula in grupo.aulas" :key="aula.id" class="aula-card mb-2 mt-0" style="border-radius:0 0 8px 8px">
         <div class="aula-card-header">
           <div>
             <div class="aula-date">{{ formatDate(aula.data) }}</div>
           </div>
-          <div style="text-align:right">
+          <div class="text-end">
             <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ aulasStore.valorAula(aula).toFixed(2) }}</div>
             <div style="font-size:.7rem;color:var(--text-muted)">{{ alunosPresentes(aula) }} alunos</div>
           </div>

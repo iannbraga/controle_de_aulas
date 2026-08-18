@@ -78,18 +78,12 @@ function toggleAtivoResp(resp: Responsavel): void {
       <i class="bi bi-person-vcard"></i>
       Nenhum responsável ativo.
     </div>
-    <div class="card p-0" v-if="responsaveisExibidos.length > 0">
-      <div v-for="(resp, idx) in responsaveisExibidos" :key="resp.id" class="list-item" :style="idx === 0 ? 'border-radius:12px 12px 0 0' : ''">
-        <div class="avatar" style="background:#fff8e1;border-color:#ffe082;color:#7b4a00">
-          <i class="bi bi-person-badge-fill" style="font-size:.95rem"></i>
-        </div>
+    <div class="card list-group p-0" v-if="responsaveisExibidos.length > 0">
+      <div v-for="resp in responsaveisExibidos" :key="resp.id" class="list-group-item list-item resp-item">
         <div class="info">
-          <div class="nome">{{ nomeResponsavel(resp) }}</div>
+          <div class="nome resp-nome">{{ nomeResponsavel(resp) }}</div>
           <div class="meta mt-1 d-flex flex-wrap gap-2">
-            <span :class="resp.ativo ? 'text-success' : 'text-danger'" style="font-size:.7rem">
-              <i :class="resp.ativo ? 'bi bi-circle-fill' : 'bi bi-circle'" style="font-size:.5rem"></i>
-              {{ resp.ativo ? 'Ativo' : 'Inativo' }}
-            </span>
+            <span class="badge rounded-pill" :class="resp.ativo ? 'text-bg-success' : 'text-bg-danger'" style="font-size:.65rem">{{ resp.ativo ? 'Ativo' : 'Inativo' }}</span>
           </div>
           <div v-if="resp.nomePai" class="meta mt-1 d-flex flex-wrap gap-2">
             <span><i class="bi bi-person-fill"></i> Pai: {{ resp.nomePai }}</span>
@@ -102,21 +96,42 @@ function toggleAtivoResp(resp: Responsavel): void {
             <span v-if="resp.emailMae"><i class="bi bi-envelope"></i> {{ resp.emailMae }}</span>
           </div>
           <div class="alunos-vinculados" v-if="catalog.getAlunosDoResponsavel(resp.id).length > 0">
-            <span v-for="al in catalog.getAlunosDoResponsavel(resp.id)" :key="al.id" class="av-chip">
+            <span v-for="al in catalog.getAlunosDoResponsavel(resp.id)" :key="al.id" class="badge av-chip">
               <i class="bi bi-person-fill"></i> {{ al.nome }}
             </span>
           </div>
           <div v-if="resp.observacoes" class="meta mt-1" style="font-style:italic">{{ resp.observacoes }}</div>
         </div>
-        <div class="actions">
-          <button class="btn-icon" style="color:#25D366" @click="abrirWhatsResp(resp)" title="Enviar fechamento via WhatsApp"><i class="bi bi-whatsapp"></i></button>
-          <button class="btn-icon" :title="resp.ativo ? 'Desativar' : 'Reativar'" @click="toggleAtivoResp(resp)">
-            <i :class="resp.ativo ? 'bi bi-toggle2-on text-success' : 'bi bi-toggle2-off text-danger'"></i>
+        <div class="dropdown">
+          <button class="btn-icon" data-bs-toggle="dropdown" aria-expanded="false" title="Ações">
+            <i class="bi bi-three-dots-vertical"></i>
           </button>
-          <button class="btn-icon" @click="ui.openModalResp(resp)"><i class="bi bi-pencil"></i></button>
-          <button class="btn-icon danger" @click="delResp(resp.id)"><i class="bi bi-trash"></i></button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><button class="dropdown-item" style="color:#25D366" @click="abrirWhatsResp(resp)"><i class="bi bi-whatsapp"></i> Cobrar via WhatsApp</button></li>
+            <li><button class="dropdown-item" @click="toggleAtivoResp(resp)">
+              <i :class="resp.ativo ? 'bi bi-toggle2-on text-success' : 'bi bi-toggle2-off text-danger'"></i> {{ resp.ativo ? 'Desativar' : 'Reativar' }}
+            </button></li>
+            <li><button class="dropdown-item" @click="ui.openModalResp(resp)"><i class="bi bi-pencil"></i> Editar</button></li>
+            <li><button class="dropdown-item text-danger" @click="delResp(resp.id)"><i class="bi bi-trash"></i> Excluir</button></li>
+          </ul>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Sem avatar nesta lista (não usamos foto de pai/mãe) — o espaço liberado
+   vai para um nome maior e mais legível. */
+.resp-item {
+  align-items: flex-start;
+}
+
+.resp-nome {
+  font-size: 1.02rem;
+}
+
+.resp-item .dropdown {
+  flex-shrink: 0;
+}
+</style>

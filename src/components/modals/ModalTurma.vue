@@ -24,11 +24,14 @@ async function salvar(): Promise<void> {
 </script>
 
 <template>
-  <div class="modal-backdrop-custom" v-if="ui.modals.turma" @click.self="ui.modals.turma = false">
-    <div class="modal-sheet">
+  <div class="modal-backdrop-custom modal" v-if="ui.modals.turma" @click.self="ui.modals.turma = false">
+    <div class="modal-sheet modal-content">
       <div class="modal-handle"></div>
-      <div class="modal-title"><i class="bi bi-calendar-week-fill"></i> {{ ui.formTurma.id ? 'Editar' : 'Nova' }} Turma</div>
-      <div v-if="nucleo" style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px">
+      <div class="modal-header">
+        <div class="modal-title"><i class="bi bi-calendar-week-fill"></i> {{ ui.formTurma.id ? 'Editar' : 'Nova' }} Turma</div>
+      </div>
+      <div class="modal-body">
+      <div v-if="nucleo" class="mb-3" style="font-size:0.8rem;color:var(--text-muted)">
         <i class="bi bi-geo-alt-fill"></i> {{ nucleo.nome }}
       </div>
       <div class="mb-3">
@@ -52,13 +55,16 @@ async function salvar(): Promise<void> {
           <input class="form-check-input" type="checkbox" v-model="ui.formTurma.ativo" id="turmaAtiva" />
           <label class="form-check-label" for="turmaAtiva">Ativa</label>
         </div>
-        <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px">
+        <div class="mt-1" style="font-size:0.73rem;color:var(--text-muted)">
           <i class="bi bi-info-circle"></i> Turmas inativas somem das opções de matrícula, mas os alunos já matriculados continuam vinculados.
         </div>
       </div>
-      <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary flex-fill" @click="ui.modals.turma = false">Cancelar</button>
-        <button class="btn-gold flex-fill justify-content-center" @click="salvar"><i class="bi bi-check-lg"></i> Salvar</button>
+      </div>
+      <div class="modal-footer">
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-fill" @click="ui.modals.turma = false">Cancelar</button>
+          <button class="btn-gold flex-fill justify-content-center" @click="salvar"><i class="bi bi-check-lg"></i> Salvar</button>
+        </div>
       </div>
     </div>
   </div>

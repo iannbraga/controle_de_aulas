@@ -70,9 +70,9 @@ watch(() => auth.user, (user, prevUser) => {
         <div v-if="sync.status === 'migrating'">Migrando seus dados antigos para a nuvem...</div>
         <div v-else-if="sync.status === 'checking'">Verificando seus dados...</div>
         <div v-else-if="sync.status === 'loading'">Carregando...</div>
-        <div v-else-if="sync.status === 'error'" style="color:var(--chess-red);text-align:center;padding:0 24px">
+        <div v-else-if="sync.status === 'error'" class="text-center" style="color:var(--chess-red);padding:0 24px">
           <i class="bi bi-exclamation-circle-fill"></i> {{ sync.errorMsg }}
-          <div style="margin-top:10px"><button class="btn btn-outline-secondary btn-sm" @click="sync.bootstrap()">Tentar de novo</button></div>
+          <div class="mt-2"><button class="btn btn-outline-secondary btn-sm" @click="sync.bootstrap()">Tentar de novo</button></div>
         </div>
       </div>
     </template>
