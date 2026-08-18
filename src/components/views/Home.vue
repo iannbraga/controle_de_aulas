@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { useUiStore } from '../../stores/ui';
 import { useAulasStore } from '../../stores/aulas';
 import { useCatalogStore } from '../../stores/catalog';
-import { getMonthRef, monthLabel, aulaInMonth, calcTotal, alunosPresentes, formatDate } from '../../lib/helpers';
+import { getMonthRef, monthLabel, aulaInMonth, alunosPresentes, formatDate } from '../../lib/helpers';
 import { agruparPorNucleo } from '../../lib/reports';
 
 const ui = useUiStore();
@@ -14,9 +14,10 @@ const mesOffset = ref(0);
 const homeRef = computed(() => getMonthRef(mesOffset.value));
 const mesAtualLabel = computed(() => monthLabel(homeRef.value));
 
+const calc = { total: aulasStore.valorAula, porPeso: aulasStore.valorPorPesoAula };
 const aulasMes = computed(() => aulasStore.aulasSorted.filter(a => aulaInMonth(a, homeRef.value.year, homeRef.value.month)));
-const aulasMesPorNucleo = computed(() => agruparPorNucleo(aulasMes.value, catalog));
-const totalMes = computed(() => aulasMes.value.reduce((s, a) => s + calcTotal(a), 0));
+const aulasMesPorNucleo = computed(() => agruparPorNucleo(aulasMes.value, catalog, calc));
+const totalMes = computed(() => aulasMes.value.reduce((s, a) => s + calc.total(a), 0));
 const totalPresencasMes = computed(() => aulasMes.value.reduce((s, a) => s + alunosPresentes(a), 0));
 
 const pendenciasDoMes = computed(() => {
@@ -81,7 +82,7 @@ function getProfNomes(aula: any): string {
             <div class="aula-date">{{ formatDate(aula.data) }}</div>
           </div>
           <div style="text-align:right">
-            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ calcTotal(aula).toFixed(2) }}</div>
+            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ aulasStore.valorAula(aula).toFixed(2) }}</div>
             <div style="font-size:.7rem;color:var(--text-muted)">{{ alunosPresentes(aula) }} alunos</div>
           </div>
         </div>

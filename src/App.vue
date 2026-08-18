@@ -21,6 +21,8 @@ import Professores from './components/views/Professores.vue';
 import Alunos from './components/views/Alunos.vue';
 import Nucleos from './components/views/Nucleos.vue';
 import Financeiro from './components/views/Financeiro.vue';
+import Mensalidades from './components/views/Mensalidades.vue';
+import Turmas from './components/views/Turmas.vue';
 
 import ModalResponsavel from './components/modals/ModalResponsavel.vue';
 import ModalProfessor from './components/modals/ModalProfessor.vue';
@@ -31,6 +33,7 @@ import ModalFinanceiroAula from './components/modals/ModalFinanceiroAula.vue';
 import ModalDados from './components/modals/ModalDados.vue';
 import ModalCompartilhar from './components/modals/ModalCompartilhar.vue';
 import ModalWhatsResp from './components/modals/ModalWhatsResp.vue';
+import ModalTurma from './components/modals/ModalTurma.vue';
 
 const auth = useAuthStore();
 const sync = useSyncStore();
@@ -91,6 +94,8 @@ watch(() => auth.user, (user, prevUser) => {
       <Alunos v-else-if="ui.view === 'alunos'" />
       <Nucleos v-else-if="ui.view === 'nucleos'" />
       <Financeiro v-else-if="ui.view === 'financeiro'" />
+      <Mensalidades v-else-if="ui.view === 'mensalidades'" />
+      <Turmas v-else-if="ui.view === 'turmas'" />
 
       <ModalResponsavel />
       <ModalProfessor />
@@ -101,6 +106,7 @@ watch(() => auth.user, (user, prevUser) => {
       <ModalDados />
       <ModalCompartilhar />
       <ModalWhatsResp />
+      <ModalTurma />
 
       <BottomNav />
     </template>

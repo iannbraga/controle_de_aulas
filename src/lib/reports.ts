@@ -1,36 +1,45 @@
 import type { Aula, GrupoPorNucleo, FinPorNucleo, FechamentoProfessor } from '../types/domain';
-import { calcTotal, calcValorPorPeso, alunosPresentes, NUCLEO_COLORS, formatDate } from './helpers';
+import { alunosPresentes, NUCLEO_COLORS, formatDate } from './helpers';
 import type { useCatalogStore } from '../stores/catalog';
 
 type Catalog = ReturnType<typeof useCatalogStore>;
 
-export function agruparPorNucleo(lista: Aula[], catalog: Catalog): GrupoPorNucleo[] {
+// Cálculo do valor de uma aula é injetado pelo caller (normalmente
+// aulasStore.valorAula/valorPorPesoAula) porque depende da forma de
+// cobrança do núcleo: 'porAula' soma o valorPago dos presentes; 'mensalidade'
+// rateia o total de mensalidades do mês pelo número de aulas do mês.
+export interface CalcAula {
+  total: (aula: Aula) => number;
+  porPeso: (aula: Aula) => number;
+}
+
+export function agruparPorNucleo(lista: Aula[], catalog: Catalog, calc: CalcAula): GrupoPorNucleo[] {
   const map: Record<string, GrupoPorNucleo> = {};
   for (const aula of lista) {
     const id = aula.nucleoId || '__sem_nucleo__';
     if (!map[id]) map[id] = { nucleoId: id, nome: catalog.getNucleoNome(aula.nucleoId), aulas: [], total: 0 };
     map[id].aulas.push(aula);
-    map[id].total += calcTotal(aula);
+    map[id].total += calc.total(aula);
   }
   return Object.values(map).sort((a, b) => b.total - a.total);
 }
 
-export function finPorNucleo(lista: Aula[], catalog: Catalog): FinPorNucleo[] {
+export function finPorNucleo(lista: Aula[], catalog: Catalog, calc: CalcAula): FinPorNucleo[] {
   const map: Record<string, FinPorNucleo> = {};
   for (const aula of lista) {
     const id = aula.nucleoId || '__sem_nucleo__';
     if (!map[id]) map[id] = { nucleoId: id, nome: catalog.getNucleoNome(aula.nucleoId), total: 0, numAulas: 0, numPresencas: 0 };
-    map[id].total += calcTotal(aula);
+    map[id].total += calc.total(aula);
     map[id].numAulas += 1;
     map[id].numPresencas += alunosPresentes(aula);
   }
   return Object.values(map).sort((a, b) => b.total - a.total);
 }
 
-export function finFechamento(lista: Aula[], catalog: Catalog): FechamentoProfessor[] {
+export function finFechamento(lista: Aula[], catalog: Catalog, calc: CalcAula): FechamentoProfessor[] {
   const map: Record<string, FechamentoProfessor & { nucleoMap: Record<string, { valor: number; numAulas: number }> }> = {};
   for (const aula of lista) {
-    const vpp = calcValorPorPeso(aula);
+    const vpp = calc.porPeso(aula);
     const nucId = aula.nucleoId || '__sem_nucleo__';
     for (const ap of aula.professores) {
       if (!map[ap.professorId]) {
@@ -67,21 +76,21 @@ export function finFechamento(lista: Aula[], catalog: Catalog): FechamentoProfes
     .sort((a, b) => b.total - a.total);
 }
 
-export function textoFechamentoMes(mesLabelRaw: string, lista: Aula[], pendencias: { aulas: { data: string }[]; total: number }[] | undefined, catalog: Catalog): string {
+export function textoFechamentoMes(mesLabelRaw: string, lista: Aula[], pendencias: { aulas: { data: string }[]; total: number }[] | undefined, catalog: Catalog, calc: CalcAula): string {
   const mes = mesLabelRaw.charAt(0).toUpperCase() + mesLabelRaw.slice(1);
   const linhas: string[] = [];
   linhas.push(`♟ Clube de Xadrez — ${mes}`);
   linhas.push('─'.repeat(30));
   linhas.push(`📋 Aulas realizadas: ${lista.length}`);
   linhas.push(`👥 Total de presenças: ${lista.reduce((s, a) => s + alunosPresentes(a), 0)}`);
-  const total = lista.reduce((s, a) => s + calcTotal(a), 0);
+  const total = lista.reduce((s, a) => s + calc.total(a), 0);
   linhas.push(`💰 Total arrecadado: R$ ${total.toFixed(2)}`);
   if (pendencias && pendencias.length > 0) {
     const totalPend = pendencias.reduce((s, p) => s + p.total, 0);
     linhas.push(`⚠️ Pendências: ${pendencias.length} aluno(s) · R$ ${totalPend.toFixed(2)}`);
   }
   linhas.push('');
-  const fechamento = finFechamento(lista, catalog);
+  const fechamento = finFechamento(lista, catalog, calc);
   if (fechamento.length > 0) {
     linhas.push('💵 Pagamento dos professores:');
     for (const fp of fechamento) linhas.push(`  • ${fp.nome}: R$ ${fp.total.toFixed(2)} (${fp.numAulas} aula${fp.numAulas > 1 ? 's' : ''})`);
@@ -91,7 +100,7 @@ export function textoFechamentoMes(mesLabelRaw: string, lista: Aula[], pendencia
     linhas.push('📅 Aulas:');
     for (const aula of lista) {
       linhas.push(`  ${formatDate(aula.data)} — ${catalog.getNucleoNome(aula.nucleoId)}`);
-      linhas.push(`    ${alunosPresentes(aula)} aluno(s) · R$ ${calcTotal(aula).toFixed(2)} · ${aula.professores.map(ap => catalog.getProfNome(ap.professorId)).join(', ') || '—'}`);
+      linhas.push(`    ${alunosPresentes(aula)} aluno(s) · R$ ${calc.total(aula).toFixed(2)} · ${aula.professores.map(ap => catalog.getProfNome(ap.professorId)).join(', ') || '—'}`);
     }
   }
   return linhas.join('\n');

@@ -5,6 +5,7 @@ import { loadData } from '../lib/persistence';
 import { importBackupToSupabase } from '../lib/migration';
 import { useCatalogStore } from './catalog';
 import { useAulasStore } from './aulas';
+import { useMensalidadesStore } from './mensalidades';
 import { useSettingsStore } from './settings';
 
 const LOCAL_MIGRATION_FLAG = 'xadrez-migrado-supabase';
@@ -38,6 +39,7 @@ export const useSyncStore = defineStore('sync', () => {
     try {
       const catalog = useCatalogStore();
       const aulasStore = useAulasStore();
+      const mensalidadesStore = useMensalidadesStore();
       let acabouDeMigrar = false;
 
       const jaMigrado = localStorage.getItem(LOCAL_MIGRATION_FLAG) === '1';
@@ -53,6 +55,7 @@ export const useSyncStore = defineStore('sync', () => {
           // qualquer cache antigo (de antes da migração) pra não reaparecer.
           catalog.clearCatalogCache();
           aulasStore.clearAulasCache();
+          mensalidadesStore.clearMensalidadesCache();
         }
         localStorage.setItem(LOCAL_MIGRATION_FLAG, '1');
       }
@@ -63,6 +66,7 @@ export const useSyncStore = defineStore('sync', () => {
       const cacheTtlMs = acabouDeMigrar ? 0 : settings.cacheTtlMinutos * 60_000;
       await catalog.fetchAll(cacheTtlMs);
       await aulasStore.fetchAll(cacheTtlMs);
+      await mensalidadesStore.fetchAll(cacheTtlMs);
       status.value = 'ready';
     } catch (e: any) {
       status.value = 'error';
@@ -76,10 +80,13 @@ export const useSyncStore = defineStore('sync', () => {
     migrationSummary.value = null;
     const catalog = useCatalogStore();
     const aulasStore = useAulasStore();
+    const mensalidadesStore = useMensalidadesStore();
     catalog.limparEstadoLocal();
     aulasStore.limparEstadoLocal();
+    mensalidadesStore.limparEstadoLocal();
     catalog.clearCatalogCache();
     aulasStore.clearAulasCache();
+    mensalidadesStore.clearMensalidadesCache();
   }
 
   return { status, errorMsg, migrationSummary, bootstrap, reset };

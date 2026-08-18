@@ -2,7 +2,7 @@
 import { useUiStore } from '../../stores/ui';
 import { useCatalogStore } from '../../stores/catalog';
 import { useAulasStore } from '../../stores/aulas';
-import { calcTotal, calcPesoTotal, calcValorPorPeso, formatDate } from '../../lib/helpers';
+import { calcPesoTotal, formatDate } from '../../lib/helpers';
 
 const ui = useUiStore();
 const catalog = useCatalogStore();
@@ -34,11 +34,14 @@ const aulasStore = useAulasStore();
       <div class="total-box mb-3">
         <div>
           <div style="font-size:.7rem;color:#aaa">Total Arrecadado</div>
-          <div class="t-valor">R$ {{ calcTotal(aulasStore.aulaFinanceiro).toFixed(2) }}</div>
+          <div class="t-valor">R$ {{ aulasStore.valorAula(aulasStore.aulaFinanceiro).toFixed(2) }}</div>
+          <div v-if="aulasStore.nucleoEhMensalidade(aulasStore.aulaFinanceiro.nucleoId)" style="font-size:.68rem;color:var(--text-muted);margin-top:2px">
+            <i class="bi bi-calendar-check"></i> Rateio da mensalidade do mês
+          </div>
         </div>
         <div style="font-size:.75rem;color:#aaa;text-align:right">
           Peso total: {{ calcPesoTotal(aulasStore.aulaFinanceiro).toFixed(2) }}<br>
-          Por peso: R$ {{ calcValorPorPeso(aulasStore.aulaFinanceiro).toFixed(2) }}
+          Por peso: R$ {{ aulasStore.valorPorPesoAula(aulasStore.aulaFinanceiro).toFixed(2) }}
         </div>
       </div>
       <div class="card-header-custom mb-0" style="border-radius:8px 8px 0 0;font-size:.85rem"><i class="bi bi-cash-coin"></i> Pagamento dos Professores</div>
@@ -49,7 +52,7 @@ const aulasStore = useAulasStore();
             <div class="nome" style="font-size:.85rem">{{ catalog.getProfNome(ap.professorId) }}</div>
             <div class="meta">Peso {{ ap.pesoAplicado }}{{ ap.pesoAplicado === 0 ? ' (observador)' : '' }}</div>
           </div>
-          <div class="pag-valor">R$ {{ (ap.pesoAplicado * calcValorPorPeso(aulasStore.aulaFinanceiro)).toFixed(2) }}</div>
+          <div class="pag-valor">R$ {{ (ap.pesoAplicado * aulasStore.valorPorPesoAula(aulasStore.aulaFinanceiro)).toFixed(2) }}</div>
         </div>
         <div v-if="aulasStore.aulaFinanceiro.professores.length === 0" style="padding:12px 14px;font-size:.8rem;color:var(--text-muted);text-align:center">Nenhum professor nesta aula.</div>
       </div>

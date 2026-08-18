@@ -6,6 +6,19 @@ export interface NucleoRow {
   nome: string;
   endereco: string | null;
   observacoes: string | null;
+  forma_cobranca: string;
+  horarios: string[] | null;
+  ativo: boolean;
+  created_at: string;
+}
+
+export interface TurmaRow {
+  id: string;
+  user_id: string;
+  nucleo_id: string;
+  dia_semana: string;
+  horario: string;
+  ativo: boolean;
   created_at: string;
 }
 
@@ -22,9 +35,12 @@ export interface ProfessorRow {
 export interface ResponsavelRow {
   id: string;
   user_id: string;
-  nome: string;
-  telefone: string | null;
-  email: string | null;
+  nome_pai: string | null;
+  telefone_pai: string | null;
+  email_pai: string | null;
+  nome_mae: string | null;
+  telefone_mae: string | null;
+  email_mae: string | null;
   observacoes: string | null;
   ativo: boolean;
   created_at: string;
@@ -36,7 +52,10 @@ export interface AlunoRow {
   nome: string;
   telefone: string | null;
   responsavel_id: string | null;
+  nucleo_id: string | null;
   valor_padrao: number;
+  valor_mensalidade: number;
+  turma_id: string | null;
   observacoes: string | null;
   ativo: boolean;
   created_at: string;
@@ -47,9 +66,24 @@ export interface AulaRow {
   user_id: string;
   data: string;
   nucleo_id: string | null;
+  turma_id: string | null;
   professores: unknown; // AulaProfessor[]
   alunos: unknown; // AulaAluno[]
   observacoes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MensalidadeRow {
+  id: string;
+  user_id: string;
+  aluno_id: string;
+  nucleo_id: string;
+  ano: number;
+  mes: number;
+  valor: number;
+  pago: boolean;
+  data_pagamento: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { useUiStore } from '../../stores/ui';
 import { useAulasStore } from '../../stores/aulas';
 import { useCatalogStore } from '../../stores/catalog';
-import { getMonthRef, monthLabel, aulaInMonth, formatDate } from '../../lib/helpers';
+import { getMonthRef, monthLabel, aulaInMonth, formatDate, nomeResponsavel, telefoneResponsavel } from '../../lib/helpers';
 
 const ui = useUiStore();
 const aulasStore = useAulasStore();
@@ -18,7 +18,7 @@ const respWhatsAulas = computed(() => {
   const alunosDoResp = catalog.alunos.filter(a => a.responsavelId === ui.respWhatsTarget!.id).map(a => a.id);
   if (!alunosDoResp.length) return [];
   return aulasStore.aulasSorted
-    .filter(a => aulaInMonth(a, year, month))
+    .filter(a => aulaInMonth(a, year, month) && !aulasStore.nucleoEhMensalidade(a.nucleoId)) // mensalidade é cobrada à parte, ver tela Mensalidades
     .map(aula => ({ ...aula, alunosDoResp: aula.alunos.filter(aa => aa.presente && alunosDoResp.includes(aa.alunoId)) }))
     .filter(a => a.alunosDoResp.length > 0);
 });
@@ -44,7 +44,7 @@ const textoWhatsResp = computed(() => {
   const linhas: string[] = [];
 
   linhas.push(`Mentes em Xeque — Cobrança ${mesLabel}`);
-  linhas.push(`Responsável: ${resp.nome}`);
+  linhas.push(`Responsável: ${nomeResponsavel(resp)}`);
   linhas.push(sep);
 
   let totalGeral = 0;
@@ -74,7 +74,7 @@ const textoWhatsResp = computed(() => {
 
 function enviarWhatsResp(): void {
   if (!ui.respWhatsTarget) return;
-  const tel = ui.respWhatsTarget.telefone?.replace(/\D/g, '') || '';
+  const tel = telefoneResponsavel(ui.respWhatsTarget).replace(/\D/g, '') || '';
   const texto = encodeURIComponent(textoWhatsResp.value);
   const url = tel ? `https://wa.me/55${tel}?text=${texto}` : `https://wa.me/?text=${texto}`;
   window.open(url, '_blank');
@@ -97,9 +97,9 @@ function copiarTextoWhatsResp(): void {
           <i class="bi bi-person-badge-fill" style="font-size:.95rem"></i>
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-weight:600;font-size:.95rem">{{ ui.respWhatsTarget.nome }}</div>
-          <div style="font-size:.78rem;color:var(--text-muted)" v-if="ui.respWhatsTarget.telefone">
-            <i class="bi bi-phone"></i> {{ ui.respWhatsTarget.telefone }}
+          <div style="font-weight:600;font-size:.95rem">{{ nomeResponsavel(ui.respWhatsTarget) }}</div>
+          <div style="font-size:.78rem;color:var(--text-muted)" v-if="telefoneResponsavel(ui.respWhatsTarget)">
+            <i class="bi bi-phone"></i> {{ telefoneResponsavel(ui.respWhatsTarget) }}
           </div>
           <div style="font-size:.75rem;color:var(--chess-red)" v-else>
             <i class="bi bi-exclamation-circle"></i> Sem telefone cadastrado
@@ -138,7 +138,7 @@ function copiarTextoWhatsResp(): void {
       <div class="d-flex gap-2 mt-3">
         <button class="btn btn-outline-secondary flex-fill" @click="copiarTextoWhatsResp"><i class="bi bi-clipboard"></i> Copiar</button>
         <button class="btn flex-fill justify-content-center" style="background:#25D366;color:#fff;border:none;border-radius:10px;font-weight:600;display:flex;align-items:center;gap:6px" @click="enviarWhatsResp">
-          <i class="bi bi-whatsapp"></i> {{ ui.respWhatsTarget.telefone ? 'Abrir WhatsApp' : 'Enviar (sem número)' }}
+          <i class="bi bi-whatsapp"></i> {{ telefoneResponsavel(ui.respWhatsTarget) ? 'Abrir WhatsApp' : 'Enviar (sem número)' }}
         </button>
       </div>
       <button class="btn btn-outline-secondary w-100 mt-2" @click="ui.modals.respWhats = false">Fechar</button>

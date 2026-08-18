@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useUiStore } from '../../stores/ui';
 import { useAulasStore } from '../../stores/aulas';
+import { useCatalogStore } from '../../stores/catalog';
 
 const ui = useUiStore();
 const aulasStore = useAulasStore();
+const catalog = useCatalogStore();
 </script>
 
 <template>
@@ -35,6 +37,12 @@ const aulasStore = useAulasStore();
     </button>
     <button class="nav-btn" :class="{active: ui.view === 'financeiro'}" @click="ui.view = 'financeiro'">
       <i class="bi bi-cash-coin"></i> Financeiro
+    </button>
+    <button v-if="catalog.nucleos.some(n => n.formaCobranca === 'mensalidade')" class="nav-btn" :class="{active: ui.view === 'mensalidades'}" @click="ui.view = 'mensalidades'">
+      <i class="bi bi-calendar-check"></i> Mensalidades
+    </button>
+    <button v-if="catalog.nucleos.some(n => n.formaCobranca === 'mensalidade')" class="nav-btn" :class="{active: ui.view === 'turmas'}" @click="ui.view = 'turmas'">
+      <i class="bi bi-calendar-week"></i> Turmas
     </button>
   </nav>
 </template>

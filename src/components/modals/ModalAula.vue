@@ -3,16 +3,52 @@ import { computed } from 'vue';
 import { useUiStore } from '../../stores/ui';
 import { useCatalogStore } from '../../stores/catalog';
 import { useAulasStore } from '../../stores/aulas';
+import { labelTurma } from '../../lib/helpers';
 
 const ui = useUiStore();
 const catalog = useCatalogStore();
 const aulasStore = useAulasStore();
 
-// Alunos ativos + quaisquer alunos inativos que já façam parte desta aula
-// (mesma regra do app original, para não "sumir" um aluno inativado depois do registro).
+// Núcleos de mensalidade cobram adiantado (ver Mensalidades) — aqui só
+// marcamos presença, sem pedir valor/status de pagamento por aluno.
+const nucleoEhMensalidade = computed(() => aulasStore.nucleoEhMensalidade(aulasStore.form.nucleoId));
+
+// Núcleos ativos + o núcleo já selecionado nesta aula, mesmo que tenha sido
+// desativado depois (pra não sumir a opção ao editar uma aula antiga).
+const nucleosForm = computed(() => {
+  const atual = catalog.nucleos.find(n => n.id === aulasStore.form.nucleoId && !n.ativo);
+  return atual ? [...catalog.nucleosAtivos, atual] : catalog.nucleosAtivos;
+});
+
+// Turmas do núcleo selecionado (só relevante em núcleos de mensalidade):
+// ativas + a já escolhida nesta aula, mesmo que tenha sido desativada depois.
+const turmasForm = computed(() => {
+  if (!aulasStore.form.nucleoId) return [];
+  const doNucleo = catalog.getTurmasDoNucleo(aulasStore.form.nucleoId);
+  const atual = doNucleo.find(t => t.id === aulasStore.form.turmaId && !t.ativo);
+  const ativas = doNucleo.filter(t => t.ativo);
+  return atual ? [...ativas, atual] : ativas;
+});
+
+// Ao trocar o núcleo manualmente, a turma escolhida antes deixa de valer.
+function onChangeNucleo(): void {
+  aulasStore.form.turmaId = '';
+}
+
+// Alunos a mostrar na lista de presença:
+// - núcleo por aula: todos os alunos ativos (+ inativos já presentes nesta aula).
+// - núcleo de mensalidade: só os matriculados na turma escolhida (+ os já
+//   presentes nesta aula, mesmo que não sejam mais dessa turma, pra não sumir
+//   um registro antigo ao editar).
 const alunosAtivosForm = computed(() => {
   const idsNaAula = aulasStore.form.alunos.map(a => a.alunoId);
   const extras = catalog.alunos.filter(a => !a.ativo && idsNaAula.includes(a.id));
+  if (nucleoEhMensalidade.value) {
+    if (!aulasStore.form.turmaId) return extras;
+    const daTurma = catalog.alunosAtivos.filter(a => a.turmaId === aulasStore.form.turmaId);
+    const outrosJaNaAula = catalog.alunosAtivos.filter(a => a.turmaId !== aulasStore.form.turmaId && idsNaAula.includes(a.id));
+    return [...daTurma, ...outrosJaNaAula, ...extras];
+  }
   return [...catalog.alunosAtivos, ...extras];
 });
 
@@ -43,10 +79,20 @@ async function salvar(): Promise<void> {
       </div>
       <div class="mb-3">
         <label class="form-label">Núcleo</label>
-        <select class="form-select" v-model="aulasStore.form.nucleoId">
+        <select class="form-select" v-model="aulasStore.form.nucleoId" @change="onChangeNucleo">
           <option value="">Selecionar núcleo...</option>
-          <option v-for="n in catalog.nucleos" :key="n.id" :value="n.id">{{ n.nome }}</option>
+          <option v-for="n in nucleosForm" :key="n.id" :value="n.id">{{ n.nome }}{{ !n.ativo ? ' (inativo)' : '' }}</option>
         </select>
+      </div>
+      <div class="mb-3" v-if="nucleoEhMensalidade">
+        <label class="form-label">Turma</label>
+        <select class="form-select" v-model="aulasStore.form.turmaId" v-if="turmasForm.length > 0">
+          <option value="">Selecionar turma...</option>
+          <option v-for="t in turmasForm" :key="t.id" :value="t.id">{{ labelTurma(t) }}{{ !t.ativo ? ' (inativa)' : '' }}</option>
+        </select>
+        <div v-else style="font-size:0.8rem;color:var(--chess-red)">
+          <i class="bi bi-exclamation-circle"></i> Este núcleo ainda não tem turmas cadastradas.
+        </div>
       </div>
       <div class="mb-3">
         <label class="form-label d-block">Professores presentes</label>
@@ -60,19 +106,26 @@ async function salvar(): Promise<void> {
         </div>
       </div>
       <div class="mb-3">
-        <label class="form-label">Alunos — presença e pagamento</label>
-        <div v-if="catalog.alunosAtivos.length === 0" style="font-size:.82rem;color:var(--text-muted)">Nenhum aluno ativo cadastrado.</div>
+        <label class="form-label">{{ nucleoEhMensalidade ? 'Alunos — presença' : 'Alunos — presença e pagamento' }}</label>
+        <div v-if="nucleoEhMensalidade" style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px">
+          <i class="bi bi-info-circle"></i> Este núcleo cobra por mensalidade adiantada — a cobrança é feita na tela "Mensalidades", não por aula.
+        </div>
+        <div v-if="nucleoEhMensalidade && !aulasStore.form.turmaId" style="font-size:.82rem;color:var(--text-muted)">Selecione a turma acima para ver os alunos.</div>
+        <div v-else-if="catalog.alunosAtivos.length === 0" style="font-size:.82rem;color:var(--text-muted)">Nenhum aluno ativo cadastrado.</div>
+        <div v-else-if="alunosAtivosForm.length === 0" style="font-size:.82rem;color:var(--text-muted)">Nenhum aluno matriculado nesta turma.</div>
         <div v-for="al in alunosAtivosForm" :key="al.id" class="aluno-check-item">
           <input type="checkbox" class="form-check-input" style="width:20px;height:20px" :id="'al-' + al.id" :checked="aulasStore.aulaAlunoPresente(al.id)" @change="onCheckAluno(al.id, al.valorPadrao, $event)" />
           <label :for="'al-' + al.id" class="nome">{{ al.nome }}</label>
-          <div class="pag-status-toggle" v-if="aulasStore.aulaAlunoPresente(al.id)">
-            <button class="pst-btn" :class="{active: aulasStore.getAlunoPago(al.id)}" @click="aulasStore.setAlunoPago(al.id, true)" title="Pago"><i class="bi bi-check-circle-fill"></i></button>
-            <button class="pst-btn pending" :class="{active: !aulasStore.getAlunoPago(al.id)}" @click="aulasStore.setAlunoPago(al.id, false)" title="Pendente"><i class="bi bi-clock-fill"></i></button>
-          </div>
-          <input class="valor-input" type="number" min="0" step="0.50" :value="aulasStore.getAlunoValor(al.id)" @input="onValorInput(al.id, $event)" :disabled="!aulasStore.aulaAlunoPresente(al.id)" placeholder="R$" />
+          <template v-if="!nucleoEhMensalidade">
+            <div class="pag-status-toggle" v-if="aulasStore.aulaAlunoPresente(al.id)">
+              <button class="pst-btn" :class="{active: aulasStore.getAlunoPago(al.id)}" @click="aulasStore.setAlunoPago(al.id, true)" title="Pago"><i class="bi bi-check-circle-fill"></i></button>
+              <button class="pst-btn pending" :class="{active: !aulasStore.getAlunoPago(al.id)}" @click="aulasStore.setAlunoPago(al.id, false)" title="Pendente"><i class="bi bi-clock-fill"></i></button>
+            </div>
+            <input class="valor-input" type="number" min="0" step="0.50" :value="aulasStore.getAlunoValor(al.id)" @input="onValorInput(al.id, $event)" :disabled="!aulasStore.aulaAlunoPresente(al.id)" placeholder="R$" />
+          </template>
         </div>
       </div>
-      <div class="total-box mb-3" v-if="aulasStore.form.alunos.some(a => a.presente)">
+      <div class="total-box mb-3" v-if="!nucleoEhMensalidade && aulasStore.form.alunos.some(a => a.presente)">
         <div>
           <div style="font-size:.7rem;color:#aaa">Total desta aula</div>
           <div class="t-valor">R$ {{ aulasStore.calcTotalForm().toFixed(2) }}</div>

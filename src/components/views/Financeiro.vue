@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { useAulasStore } from '../../stores/aulas';
 import { useCatalogStore } from '../../stores/catalog';
 import { useUiStore } from '../../stores/ui';
-import { getMonthRef, monthLabel, aulaInMonth, calcTotal, alunosPresentes, formatDate } from '../../lib/helpers';
+import { getMonthRef, monthLabel, aulaInMonth, alunosPresentes, formatDate } from '../../lib/helpers';
 import { finPorNucleo as calcFinPorNucleo, finFechamento as calcFinFechamento, agruparPorNucleo } from '../../lib/reports';
 import type { Aula } from '../../types/domain';
 
@@ -17,12 +17,13 @@ const finAgrupamento = ref<'lista' | 'nucleo'>('lista');
 const finRef = computed(() => getMonthRef(finMesOffset.value));
 const finMesLabel = computed(() => monthLabel(finRef.value));
 const finAulasMes = computed(() => aulasStore.aulasSorted.filter(a => aulaInMonth(a, finRef.value.year, finRef.value.month)));
-const finTotal = computed(() => finAulasMes.value.reduce((s, a) => s + calcTotal(a), 0));
+const calc = { total: aulasStore.valorAula, porPeso: aulasStore.valorPorPesoAula };
+const finTotal = computed(() => finAulasMes.value.reduce((s, a) => s + calc.total(a), 0));
 const finTotalPresencas = computed(() => finAulasMes.value.reduce((s, a) => s + alunosPresentes(a), 0));
 
-const finPorNucleo = computed(() => calcFinPorNucleo(finAulasMes.value, catalog));
-const finAulasPorNucleo = computed(() => agruparPorNucleo(finAulasMes.value, catalog));
-const finFechamento = computed(() => calcFinFechamento(finAulasMes.value, catalog));
+const finPorNucleo = computed(() => calcFinPorNucleo(finAulasMes.value, catalog, calc));
+const finAulasPorNucleo = computed(() => agruparPorNucleo(finAulasMes.value, catalog, calc));
+const finFechamento = computed(() => calcFinFechamento(finAulasMes.value, catalog, calc));
 
 function getProfNomes(aula: Aula): string {
   return aula.professores.map(ap => catalog.getProfNome(ap.professorId)).join(', ') || '—';
@@ -128,7 +129,7 @@ function openFinanceiro(aula: Aula): void {
             <div class="aula-nucleo">{{ catalog.getNucleoNome(aula.nucleoId) }}</div>
           </div>
           <div class="d-flex gap-2 align-items-center">
-            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ calcTotal(aula).toFixed(2) }}</div>
+            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ aulasStore.valorAula(aula).toFixed(2) }}</div>
             <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill" style="color:var(--chess-gold)"></i></button>
           </div>
         </div>
@@ -147,7 +148,7 @@ function openFinanceiro(aula: Aula): void {
               <div class="aula-date">{{ formatDate(aula.data) }}</div>
             </div>
             <div class="d-flex gap-2 align-items-center">
-              <div style="font-family:'DM Serif Display',serif;font-size:1rem;color:var(--chess-green)">R$ {{ calcTotal(aula).toFixed(2) }}</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:1rem;color:var(--chess-green)">R$ {{ aulasStore.valorAula(aula).toFixed(2) }}</div>
               <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill" style="color:var(--chess-gold)"></i></button>
             </div>
           </div>

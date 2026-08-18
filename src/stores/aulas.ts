@@ -2,11 +2,12 @@ import { computed, reactive, ref } from 'vue';
 import { defineStore } from 'pinia';
 import type { Aula, AulaProfessor, PendenciaAluno } from '../types/domain';
 import type { AulaRow } from '../types/db';
-import { mesEncerrado } from '../lib/helpers';
+import { mesEncerrado, calcTotal, calcPesoTotal, aulaInMonth, nomeResponsavel, telefoneResponsavel } from '../lib/helpers';
 import { supabase } from '../lib/supabase';
 import { aulaFromRow, aulaToRow } from '../lib/mappers';
 import { readCache, writeCache, clearCache } from '../lib/cache';
 import { useCatalogStore } from './catalog';
+import { useMensalidadesStore } from './mensalidades';
 
 const CACHE_KEY = 'xadrez-cache-aulas';
 
@@ -14,6 +15,7 @@ const blankAula = (): Aula => ({
   id: '',
   data: new Date().toISOString().slice(0, 10),
   nucleoId: '',
+  turmaId: '',
   professores: [],
   alunos: [],
   observacoes: '',
@@ -140,12 +142,41 @@ export const useAulasStore = defineStore('aulas', () => {
     profDetalheAberto[profId] = !profDetalheAberto[profId];
   }
 
-  // ── Pendências ──
+  // ── Cálculo financeiro (considera forma de cobrança do núcleo) ──
+  // Núcleos 'porAula': soma o valorPago dos alunos presentes na própria aula
+  // (modelo original). Núcleos 'mensalidade': a "receita" da aula é o total
+  // de mensalidades do mês naquele núcleo, dividido igualmente pelo número
+  // de aulas do mês — pago adiantado, não depende de presença.
+  function valorAula(aula: Aula): number {
+    const catalog = useCatalogStore();
+    const nucleo = catalog.nucleos.find(n => n.id === aula.nucleoId);
+    if (nucleo?.formaCobranca === 'mensalidade') {
+      const mensalidadesStore = useMensalidadesStore();
+      const [y, m] = aula.data.split('-').map(Number);
+      const ano = y, mes = m - 1;
+      const totalMes = mensalidadesStore.totalDoMes(aula.nucleoId, ano, mes);
+      const numAulasMes = aulas.filter(a => a.nucleoId === aula.nucleoId && aulaInMonth(a, ano, mes)).length;
+      return numAulasMes > 0 ? totalMes / numAulasMes : 0;
+    }
+    return calcTotal(aula);
+  }
+  function valorPorPesoAula(aula: Aula): number {
+    const pt = calcPesoTotal(aula);
+    return pt > 0 ? valorAula(aula) / pt : 0;
+  }
+  function nucleoEhMensalidade(nucleoId: string): boolean {
+    const catalog = useCatalogStore();
+    return catalog.nucleos.find(n => n.id === nucleoId)?.formaCobranca === 'mensalidade';
+  }
+
+  // ── Pendências (só se aplica a núcleos com cobrança por aula — núcleos de
+  // mensalidade têm sua própria pendência, ver stores/mensalidades.ts) ──
   function buildPendenciasMap(pagas: boolean): PendenciaAluno[] {
     const catalog = useCatalogStore();
     const map: Record<string, PendenciaAluno> = {};
     for (const aula of aulas) {
       if (!mesEncerrado(aula.data)) continue; // mês ainda não encerrado: não é pendência
+      if (nucleoEhMensalidade(aula.nucleoId)) continue; // cobrado via mensalidade, não por aula
       for (const aa of aula.alunos) {
         if (aa.presente && aa.pago === pagas) {
           if (!map[aa.alunoId]) {
@@ -154,8 +185,8 @@ export const useAulasStore = defineStore('aulas', () => {
             map[aa.alunoId] = {
               alunoId: aa.alunoId,
               nome: catalog.getAlunoNome(aa.alunoId),
-              responsavel: respObj ? respObj.nome : null,
-              responsavelTel: respObj ? respObj.telefone : null,
+              responsavel: respObj ? nomeResponsavel(respObj) : null,
+              responsavelTel: respObj ? telefoneResponsavel(respObj) : null,
               aulas: [],
               total: 0,
             };
@@ -174,9 +205,11 @@ export const useAulasStore = defineStore('aulas', () => {
   const totalPendenciasGeralValor = computed(() => todasPendencias.value.reduce((s, p) => s + p.total, 0));
 
   function aulaTempendencia(aula: Aula): boolean {
+    if (nucleoEhMensalidade(aula.nucleoId)) return false;
     return aula.alunos.some(aa => aa.presente && !aa.pago);
   }
   function contarPendenciasAula(aula: Aula): number {
+    if (nucleoEhMensalidade(aula.nucleoId)) return 0;
     return aula.alunos.filter(aa => aa.presente && !aa.pago).length;
   }
   function getPendenciasAluno(alunoId: string) {
@@ -214,6 +247,7 @@ export const useAulasStore = defineStore('aulas', () => {
     openNovaAula, editarAula, salvarAula, delAula,
     aulaHasProf, toggleProfAula, aulaAlunoPresente, getAlunoValor, getAlunoPago, setAlunoPago,
     toggleAlunoAula, setAlunoValor, calcTotalForm, toggleProfDetalhe,
+    valorAula, valorPorPesoAula, nucleoEhMensalidade,
     todasPendencias, todasPendenciasPagas, totalPendenciasGeral, totalPendenciasGeralValor,
     aulaTempendencia, contarPendenciasAula, getPendenciasAluno, marcarPago, marcarTodosPagos,
     exportSnapshot, limparTudo,

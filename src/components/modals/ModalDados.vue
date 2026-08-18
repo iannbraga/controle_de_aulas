@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useUiStore } from '../../stores/ui';
 import { useCatalogStore } from '../../stores/catalog';
 import { useAulasStore } from '../../stores/aulas';
+import { useMensalidadesStore } from '../../stores/mensalidades';
 import { useAuthStore } from '../../stores/auth';
 import { useSettingsStore } from '../../stores/settings';
 import { importBackupToSupabase } from '../../lib/migration';
@@ -11,6 +12,7 @@ import type { Backup } from '../../types/domain';
 const ui = useUiStore();
 const catalog = useCatalogStore();
 const aulasStore = useAulasStore();
+const mensalidadesStore = useMensalidadesStore();
 const auth = useAuthStore();
 const settings = useSettingsStore();
 const importInput = ref<HTMLInputElement | null>(null);
@@ -40,6 +42,8 @@ function exportarJSON(): void {
     nucleos: [...catalog.nucleos],
     aulas: aulasStore.exportSnapshot(),
     responsaveis: [...catalog.responsaveis],
+    mensalidades: [...mensalidadesStore.mensalidades],
+    turmas: [...catalog.turmas],
   };
   const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -61,7 +65,7 @@ function importarJSON(event: Event): void {
       if (!dados.professores || !dados.alunos || !dados.nucleos || !dados.aulas) { ui.showToast('Arquivo inválido.'); return; }
       importando.value = true;
       const resumo = await importBackupToSupabase(dados);
-      await Promise.all([catalog.fetchAll(), aulasStore.fetchAll()]);
+      await Promise.all([catalog.fetchAll(), aulasStore.fetchAll(), mensalidadesStore.fetchAll()]);
       ui.modals.dados = false;
       ui.showToast(`Importado: ${resumo.aulas} aulas, ${resumo.professores} profs.`);
     } catch {

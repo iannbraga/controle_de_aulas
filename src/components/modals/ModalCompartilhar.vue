@@ -22,7 +22,8 @@ const pendsDoMes = computed(() => aulasStore.todasPendencias
   .filter(p => p.aulas.length > 0)
   .map(p => ({ ...p, total: p.aulas.reduce((s, i) => s + i.valor, 0) })));
 
-const textoCompartilhar = computed(() => textoFechamentoMes(shareMesLabel.value, shareAulasMes.value, pendsDoMes.value, catalog));
+const calc = { total: aulasStore.valorAula, porPeso: aulasStore.valorPorPesoAula };
+const textoCompartilhar = computed(() => textoFechamentoMes(shareMesLabel.value, shareAulasMes.value, pendsDoMes.value, catalog, calc));
 const podeCompartilharNativo = computed(() => !!navigator.share);
 
 function copiarTexto(): void {

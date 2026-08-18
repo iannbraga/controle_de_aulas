@@ -6,7 +6,10 @@ const ui = useUiStore();
 const catalog = useCatalogStore();
 
 async function salvar(): Promise<void> {
-  if (!ui.formResp.nome.trim()) { ui.showToast('Informe o nome do responsável.'); return; }
+  if (!ui.formResp.nomePai.trim() && !ui.formResp.nomeMae.trim()) {
+    ui.showToast('Informe o nome do pai e/ou da mãe.');
+    return;
+  }
   try {
     await catalog.salvarResp({ ...ui.formResp });
     ui.modals.resp = false;
@@ -22,21 +25,43 @@ async function salvar(): Promise<void> {
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-title"><i class="bi bi-person-badge-fill"></i> {{ ui.formResp.id ? 'Editar' : 'Novo' }} Responsável</div>
+      <div style="font-size:0.73rem;color:var(--text-muted);margin-bottom:10px">
+        <i class="bi bi-info-circle"></i> Preencha os dados de pelo menos um dos dois. Dá pra cadastrar pai e mãe juntos, como um único responsável.
+      </div>
+
+      <div class="mb-2" style="font-family:'DM Serif Display',serif;font-size:.95rem;color:var(--chess-dark-brown)">Pai</div>
       <div class="mb-3">
         <label class="form-label">Nome</label>
-        <input class="form-control" v-model="ui.formResp.nome" placeholder="Nome completo" />
+        <input class="form-control" v-model="ui.formResp.nomePai" placeholder="Nome completo do pai" />
       </div>
       <div class="mb-3">
         <label class="form-label">Telefone</label>
-        <input class="form-control" v-model="ui.formResp.telefone" placeholder="(00) 00000-0000" type="tel" />
+        <input class="form-control" v-model="ui.formResp.telefonePai" placeholder="(00) 00000-0000" type="tel" />
       </div>
       <div class="mb-3">
         <label class="form-label">E-mail (opcional)</label>
-        <input class="form-control" v-model="ui.formResp.email" placeholder="email@exemplo.com" type="email" />
+        <input class="form-control" v-model="ui.formResp.emailPai" placeholder="email@exemplo.com" type="email" />
+      </div>
+
+      <hr class="my-3" />
+
+      <div class="mb-2" style="font-family:'DM Serif Display',serif;font-size:.95rem;color:var(--chess-dark-brown)">Mãe</div>
+      <div class="mb-3">
+        <label class="form-label">Nome</label>
+        <input class="form-control" v-model="ui.formResp.nomeMae" placeholder="Nome completo da mãe" />
       </div>
       <div class="mb-3">
+        <label class="form-label">Telefone</label>
+        <input class="form-control" v-model="ui.formResp.telefoneMae" placeholder="(00) 00000-0000" type="tel" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">E-mail (opcional)</label>
+        <input class="form-control" v-model="ui.formResp.emailMae" placeholder="email@exemplo.com" type="email" />
+      </div>
+
+      <div class="mb-3">
         <label class="form-label">Observações</label>
-        <textarea class="form-control" v-model="ui.formResp.observacoes" rows="2" placeholder="Ex: pai do João e da Maria"></textarea>
+        <textarea class="form-control" v-model="ui.formResp.observacoes" rows="2" placeholder="Ex: retirar só com a mãe..."></textarea>
       </div>
       <div class="mb-4">
         <div class="form-check form-switch">

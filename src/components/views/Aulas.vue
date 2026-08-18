@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { useUiStore } from '../../stores/ui';
 import { useAulasStore } from '../../stores/aulas';
 import { useCatalogStore } from '../../stores/catalog';
-import { getMonthRef, monthLabel, aulaInMonth, calcTotal, alunosPresentes, formatDate } from '../../lib/helpers';
+import { getMonthRef, monthLabel, aulaInMonth, alunosPresentes, formatDate } from '../../lib/helpers';
 import { agruparPorNucleo } from '../../lib/reports';
 import type { Aula } from '../../types/domain';
 
@@ -16,7 +16,8 @@ const aulaViewRef = computed(() => getMonthRef(aulaMesOffset.value));
 const aulaMesLabel = computed(() => monthLabel(aulaViewRef.value));
 
 const aulasSortedMes = computed(() => aulasStore.aulasSorted.filter(a => aulaInMonth(a, aulaViewRef.value.year, aulaViewRef.value.month)));
-const aulasSortedMesPorNucleo = computed(() => agruparPorNucleo(aulasSortedMes.value, catalog));
+const calc = { total: aulasStore.valorAula, porPeso: aulasStore.valorPorPesoAula };
+const aulasSortedMesPorNucleo = computed(() => agruparPorNucleo(aulasSortedMes.value, catalog, calc));
 
 function getProfNomes(aula: Aula): string {
   return aula.professores.map(ap => catalog.getProfNome(ap.professorId)).join(', ') || '—';
@@ -61,7 +62,7 @@ function delAula(id: string): void {
             <div class="aula-date">{{ formatDate(aula.data) }}</div>
           </div>
           <div class="d-flex gap-2 align-items-center">
-            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ calcTotal(aula).toFixed(2) }}</div>
+            <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--chess-green)">R$ {{ aulasStore.valorAula(aula).toFixed(2) }}</div>
             <button class="btn-icon" @click="openFinanceiro(aula)"><i class="bi bi-pie-chart-fill" style="color:var(--chess-gold)"></i></button>
             <button class="btn-icon" @click="editarAula(aula)"><i class="bi bi-pencil"></i></button>
             <button class="btn-icon danger" @click="delAula(aula.id)"><i class="bi bi-trash"></i></button>
